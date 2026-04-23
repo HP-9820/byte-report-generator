@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  --color-byte-blue: #0084ff;
+  --color-byte-blue-dark: #004ecc;
+  --color-byte-green: #69BE4F;
+  --color-byte-green-dark: #4d8d3a;
+  --color-byte-purple: #9d00ff;
+  --color-byte-dark: #000000;
+  --color-byte-gray: #a0a0a0;
+
+  --font-inter: "Inter", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-black text-white px-0;
+    font-family: var(--font-inter);
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('/websiteBG.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    margin: 0;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/[0.03] backdrop-blur-2xl border border-white/10;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+
+  .glass-gradient {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .glass-upload {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-green {
+    @apply bg-gradient-to-b from-[#76C859] to-[#5CBA47] text-white px-6 py-2 rounded-lg font-bold shadow-lg hover:brightness-110 transition-all active:scale-95;
+  }
+
+  .btn-primary {
+    @apply bg-byte-blue text-white px-8 py-3 rounded-full font-bold uppercase transition-all hover:opacity-90 active:scale-95;
+  }
+
+  .btn-outline {
+    @apply border border-white/20 text-white px-8 py-3 rounded-full font-medium transition-all hover:bg-white/5 active:scale-95;
+  }
+}
+
+/* Custom Animations */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.8s ease-out forwards;
+}
