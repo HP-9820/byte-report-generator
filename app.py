@@ -28,6 +28,10 @@ app.add_middleware(
         "http://localhost:5174",
         "https://byte-report-generator.netlify.app",
         "https://byte-report-generator.netlify.app/"
+        "https://reports.byteedu.org",
+        "https://reports.byteedu.org/",
+        "https://byteedu.org",
+        "https://byteedu.org/",
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
