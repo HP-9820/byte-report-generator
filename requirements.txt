@@ -1,0 +1,40 @@
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+jinja2==3.1.2
+
+# Database
+mysql-connector-python==8.2.0
+
+# AWS S3
+boto3==1.28.60
+
+# Authentication & Security
+PyJWT==2.8.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic[email]
+
+# Data Processing & Analysis
+pandas==2.1.3
+numpy==1.24.3
+openpyxl==3.1.2
+xlrd==2.0.1
+
+# AI/ML
+openai==1.3.5
+httpx==0.27.2
+google-generativeai==0.3.2
+
+# Document Generation
+python-docx==1.1.0
+
+# Visualization
+matplotlib==3.8.2
+
+# Utility
+requests==2.31.0
+python-dateutil==2.8.2

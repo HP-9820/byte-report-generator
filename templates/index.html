@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ByTE | Intelligent Report Generator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and Babel for CDN usage -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'byte-blue': '#0084ff',
+                        'byte-purple': '#9d00ff',
+                        'byte-dark': '#000000',
+                        'byte-gray': '#a0a0a0',
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-black text-white font-inter;
+            }
+        }
+        @layer components {
+            .glass-card {
+                @apply bg-white/5 backdrop-blur-md border border-white/10;
+            }
+            .btn-primary {
+                @apply bg-byte-blue text-white px-8 py-3 rounded-full font-bold uppercase tracking-wider transition-all hover:opacity-90 active:scale-95 shadow-lg shadow-byte-blue/30;
+            }
+            .btn-outline {
+                @apply border border-white/20 text-white px-8 py-3 rounded-full font-medium transition-all hover:bg-white/5 active:scale-95;
+            }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotateY(-5deg); }
+            50% { transform: translateY(-20px) rotateY(-5deg); }
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef } = React;
+
+        const Navbar = () => {
+            return (
+                <nav className="flex justify-between items-center py-8 px-[5%] max-w-[1400px] mx-auto w-full relative z-50">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-byte-blue to-byte-purple rounded-lg flex items-center justify-center shadow-lg shadow-byte-blue/20">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                                <path d="M12 2L2 19h20L12 2zm0 3.8L18.4 17H5.6L12 5.8z" />
+                            </svg>
+                        </div>
+                        <span className="text-xl font-extrabold uppercase tracking-wider">Template DSGN</span>
+                    </div>
+
+                    <div className="hidden md:flex gap-8">
+                        {['About', 'Download', 'Pricing', 'Features', 'Contact'].map((link) => (
+                            <a key={link} href="#" className="text-byte-gray text-xs font-medium uppercase tracking-widest hover:text-white transition-colors">
+                                {link}
+                            </a>
+                        ))}
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                        <a href="#" className="bg-byte-blue text-white px-7 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity">
+                            Sign In
+                        </a>
+                        <div className="flex flex-col gap-1.5 cursor-pointer group">
+                            <span className="block h-0.5 w-6 bg-white transition-all group-hover:bg-byte-blue"></span>
+                            <span className="block h-0.5 w-6 bg-white transition-all group-hover:bg-byte-blue"></span>
+                        </div>
+                    </div>
+                </nav>
+            );
+        };
+
+        const App = () => {
+            const [file, setFile] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [status, setStatus] = useState({ type: '', message: '' });
+            const [progress, setProgress] = useState(0);
+            const fileInputRef = useRef(null);
+
+            const handleFileChange = (e) => {
+                if (e.target.files.length > 0) {
+                    setFile(e.target.files[0]);
+                    setStatus({ type: '', message: '' });
+                }
+            };
+
+            const handleGenerate = async (e) => {
+                e.preventDefault();
+                if (!file) {
+                    alert('Please select a file first.');
+                    return;
+                }
+
+                setLoading(true);
+                setProgress(30);
+                setStatus({ type: 'info', message: 'Generating reports... this may take a moment.' });
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await fetch('/generate-reports', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        setProgress(100);
+                        setStatus({ type: 'success', message: 'Success! Your reports are ready.' });
+
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = response.headers.get('Content-Disposition')?.split('filename=')[1] || 'reports.zip';
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        setLoading(false);
+                    } else {
+                        const error = await response.json();
+                        throw new Error(error.detail || 'Generation failed');
+                    }
+                } catch (err) {
+                    setLoading(false);
+                    setProgress(0);
+                    setStatus({ type: 'error', message: 'Error: ' + err.message });
+                }
+            };
+
+            return (
+                <div className="min-h-screen relative overflow-x-hidden font-inter text-white selection:bg-byte-blue/30 bg-black">
+                    {/* Background Image Overlay */}
+                    <div
+                        className="fixed inset-0 z-0 bg-cover bg-center brightness-[0.3] opacity-60 pointer-events-none"
+                        style={{ backgroundImage: "url('/assets/bg.png')" }}
+                    ></div>
+
+                    {/* Glow effects */}
+                    <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-byte-purple/10 rounded-full blur-[120px] z-0 pointer-events-none"></div>
+                    <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-byte-blue/10 rounded-full blur-[120px] z-0 pointer-events-none"></div>
+
+                    <Navbar />
+
+                    <main className="max-w-[1400px] mx-auto px-[5%] py-12 md:py-24 grid md:grid-cols-2 gap-12 items-center relative z-10">
+                        <div className="hero-content space-y-10 animate-fadeIn">
+                            <h1 className="text-7xl md:text-9xl font-extrabold tracking-tighter leading-none">
+                                Welcome<span className="text-byte-blue">.</span>
+                            </h1>
+
+                            <div
+                                className="glass-card rounded-[40px] px-8 py-5 flex items-center gap-4 max-w-[500px] relative group cursor-pointer transition-all hover:border-white/20 active:scale-[0.98]"
+                                onClick={() => fileInputRef.current.click()}
+                            >
+                                <svg className="text-byte-gray opacity-70 group-hover:text-byte-blue transition-colors" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <span className={`text-lg truncate ${file ? 'text-white' : 'text-byte-gray'}`}>
+                                    {file ? file.name : "Select Excel or CSV file..."}
+                                </span>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept=".xlsx, .xls, .csv"
+                                    onChange={handleFileChange}
+                                />
+                            </div>
+
+                            <div className="flex items-center gap-6">
+                                <button
+                                    onClick={handleGenerate}
+                                    className="btn-primary"
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Processing...' : 'Free Trial'}
+                                </button>
+                                <button className="btn-outline">
+                                    See more
+                                </button>
+                            </div>
+
+                            {status.message && (
+                                <div className="space-y-4 pt-4 max-w-[500px]">
+                                    <div className="flex justify-between items-center text-sm font-medium">
+                                        <p className={`${status.type === 'success' ? 'text-green-400' :
+                                                status.type === 'error' ? 'text-red-400' : 'text-blue-300'
+                                            }`}>
+                                            {status.message}
+                                        </p>
+                                        <span className="text-byte-gray">{progress}%</span>
+                                    </div>
+                                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden shadow-inner">
+                                        <div
+                                            className="h-full bg-byte-blue transition-all duration-700 ease-out shadow-[0_0_15px_rgba(0,132,255,0.6)]"
+                                            style={{ width: `${progress}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="hero-visual relative flex justify-center items-center">
+                            <div className="absolute inset-0 bg-byte-purple/20 blur-[100px] rounded-full scale-75 animate-pulse"></div>
+                            <img
+                                src="/assets/asset.png"
+                                alt="Intelligence Visual"
+                                className="w-full max-w-[650px] animate-float relative z-10 drop-shadow-[0_20px_50px_rgba(0,132,255,0.3)]"
+                            />
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
