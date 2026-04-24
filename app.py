@@ -27,7 +27,7 @@ app.add_middleware(
         "http://localhost:5173",
         "http://localhost:5174",
         "https://byte-report-generator.netlify.app",
-        "https://byte-report-generator.netlify.app/"
+        "https://byte-report-generator.netlify.app/",
         "https://reports.byteedu.org",
         "https://reports.byteedu.org/",
         "https://byteedu.org",
