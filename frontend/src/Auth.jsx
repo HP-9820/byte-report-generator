@@ -1,4 +1,6 @@
+
 import React, { useState } from 'react';
+const API_URL = import.meta.env.VITE_API_URL || 'https://byte-report-generator.onrender.com';
 
 const Auth = ({ onLogin }) => {
     const [isRegister, setIsRegister] = useState(false);
@@ -14,7 +16,7 @@ const Auth = ({ onLogin }) => {
 
         try {
             if (isRegister) {
-                const response = await fetch('http://localhost:8000/register', {
+                const response = await fetch(`${API_URL}/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
@@ -32,7 +34,7 @@ const Auth = ({ onLogin }) => {
                 formData.append('username', email); // OAuth2 expects 'username' field, we pass email
                 formData.append('password', password);
 
-                const response = await fetch('http://localhost:8000/login', {
+                const response = await fetch(`${API_URL}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: formData

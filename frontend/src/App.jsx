@@ -9,7 +9,7 @@ import History from './History';
 gsap.registerPlugin(ScrollTrigger);
 
 // ─── CONFIG ───────────────────────────────────────────────
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = 'https://byte-report-generator.onrender.com';
 const POLL_INTERVAL_MS = 3000;
 // ──────────────────────────────────────────────────────────
 
@@ -32,7 +32,6 @@ const Navbar = ({ isAuthenticated, onLogout, currentView, onViewChange }) => {
           </div>
         </div>
 
-        {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
             <a key={link} href={`#${link.toLowerCase().replace(/\s+/g, '-')}`} className="text-white/80 hover:text-white transition-colors text-sm font-medium">
@@ -56,14 +55,12 @@ const Navbar = ({ isAuthenticated, onLogout, currentView, onViewChange }) => {
           )}
         </div>
 
-        {/* Mobile Toggle */}
         <div className="md:hidden flex flex-col gap-1.5 cursor-pointer z-[110]" onClick={() => setIsMenuOpen(!isMenuOpen)}>
           <span className={`block h-0.5 w-6 bg-white transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
           <span className={`block h-0.5 w-6 bg-white transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></span>
           <span className={`block h-0.5 w-6 bg-white transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
         </div>
 
-        {/* Mobile Menu */}
         <div className={`fixed inset-0 bg-black/95 backdrop-blur-2xl z-[105] flex flex-col items-center justify-center gap-8 transition-all duration-500 md:hidden ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
           {navLinks.map((link) => (
             <a key={link} href={`#${link.toLowerCase().replace(/\s+/g, '-')}`} onClick={() => setIsMenuOpen(false)} className="text-2xl font-bold text-white hover:text-byte-green transition-colors">
@@ -111,8 +108,7 @@ const App = () => {
   const [reportCount, setReportCount] = useState(5);
   const [contactStatus, setContactStatus] = useState({ type: '', message: '' });
 
-  // ── Generation state (replaces old loading/progress/status/downloadUrl) ──
-  const [genStatus, setGenStatus] = useState('idle'); // idle | running | done | error
+  const [genStatus, setGenStatus] = useState('idle');
   const [genProgress, setGenProgress] = useState(0);
   const [genTotal, setGenTotal] = useState(0);
   const [genCurrentName, setGenCurrentName] = useState('');
@@ -120,21 +116,18 @@ const App = () => {
   const [genFileName, setGenFileName] = useState(null);
   const [genError, setGenError] = useState(null);
 
-  const pollerRef = useRef(null);
+  const fakeTimerRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // ── Stop polling helper ──
-  const stopPolling = () => {
-    if (pollerRef.current) {
-      clearInterval(pollerRef.current);
-      pollerRef.current = null;
+  const stopFakeTimer = () => {
+    if (fakeTimerRef.current) {
+      clearInterval(fakeTimerRef.current);
+      fakeTimerRef.current = null;
     }
   };
 
-  // ── Cleanup on unmount ──
-  useEffect(() => () => stopPolling(), []);
+  useEffect(() => () => stopFakeTimer(), []);
 
-  // ── GSAP animations ──
   useEffect(() => {
     gsap.fromTo(".hero-content > *",
       { y: 30, opacity: 0 },
@@ -156,7 +149,7 @@ const App = () => {
   };
 
   const resetGenState = () => {
-    stopPolling();
+    stopFakeTimer();
     setGenStatus('idle');
     setGenProgress(0);
     setGenTotal(0);
@@ -166,49 +159,23 @@ const App = () => {
     setGenError(null);
   };
 
-  // ── Poll /job-status/{job_id} every 3s ──
-  const startPolling = (jobId) => {
-    pollerRef.current = setInterval(async () => {
-      try {
-        const res = await fetch(`${API_BASE}/job-status/${jobId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (!res.ok) {
-          stopPolling();
-          setGenStatus('error');
-          setGenError('Lost connection to server. Check My Reports — some may have been saved.');
-          return;
-        }
-
-        const data = await res.json();
-        setGenProgress(data.progress ?? 0);
-        setGenTotal(data.total ?? 0);
-        setGenCurrentName(data.current_name ?? '');
-
-        if (data.status === 'done') {
-          stopPolling();
-          setGenStatus('done');
-          setGenDownloadUrl(data.result?.download_url ?? null);
-          setGenFileName(data.result?.file_name ?? null);
-        } else if (data.status === 'error') {
-          stopPolling();
-          setGenStatus('error');
-          setGenError(data.error ?? 'An unknown error occurred.');
-        }
-      } catch (err) {
-        // Network blip — keep polling
-        console.warn('Poll error (will retry):', err);
-      }
-    }, POLL_INTERVAL_MS);
-  };
-
-  // ── Kick off generation ──
   const handleGenerate = async () => {
     if (!file) return;
 
     resetGenState();
     setGenStatus('running');
+
+    const fakeTotal = parseInt(reportCount) || 5;
+    setGenTotal(fakeTotal);
+    let fakeProgress = 0;
+
+    fakeTimerRef.current = setInterval(() => {
+      fakeProgress += 1;
+      if (fakeProgress < fakeTotal) {
+        setGenProgress(fakeProgress);
+        setGenCurrentName(`Processing student ${fakeProgress} of ${fakeTotal}...`);
+      }
+    }, 3000);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -220,6 +187,8 @@ const App = () => {
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
+
+      stopFakeTimer();
 
       if (res.status === 401) {
         setToken(null);
@@ -233,15 +202,22 @@ const App = () => {
 
       if (!res.ok) {
         setGenStatus('error');
-        setGenError(data.detail ?? 'Failed to start generation.');
+        setGenError(data.detail ?? data.error ?? 'Failed to generate reports.');
         return;
       }
 
-      // Backend returns 202 + job_id immediately
-      setGenTotal(data.total ?? 0);
-      startPolling(data.job_id);
+      if (data.download_url) {
+        setGenProgress(fakeTotal);
+        setGenStatus('done');
+        setGenDownloadUrl(data.download_url);
+        setGenFileName(data.file_name);
+      } else {
+        setGenStatus('error');
+        setGenError(data.error ?? 'Failed to generate reports.');
+      }
 
     } catch (err) {
+      stopFakeTimer();
       setGenStatus('error');
       setGenError(err.message ?? 'Network error. Please try again.');
     }
@@ -273,9 +249,7 @@ const App = () => {
     localStorage.removeItem('token');
   };
 
-  // Percentage for progress bar
   const pct = genTotal > 0 ? Math.round((genProgress / genTotal) * 100) : 0;
-
   const isVerifyRoute = window.location.pathname === '/verify';
 
   if (isVerifyRoute) {
@@ -309,9 +283,6 @@ const App = () => {
               <History token={token} />
             ) : (
               <>
-                {/* ══════════════════════════════════════════
-                    HERO & UPLOAD SECTION
-                ══════════════════════════════════════════ */}
                 <section id="home" className="pt-12 text-center space-y-16">
                   <div className="hero-content space-y-10">
                     <div className="flex flex-col items-center space-y-6">
@@ -333,10 +304,8 @@ const App = () => {
                     </div>
                   </div>
 
-                  {/* ── UPLOAD CARD ── */}
                   <div className="glass-upload p-12 max-w-[850px] mx-auto space-y-10">
 
-                    {/* File picker — always visible unless generating */}
                     {genStatus !== 'running' && (
                       <div className="flex flex-col items-center space-y-4">
                         <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-2 shadow-inner border border-white/5">
@@ -360,7 +329,6 @@ const App = () => {
                       </>
                     )}
 
-                    {/* ── IDLE: show count + generate button ── */}
                     {genStatus === 'idle' && file && (
                       <div className="flex flex-col items-center gap-4 animate-fadeIn">
                         <div className="flex items-center gap-3 glass-gradient px-6 py-3 rounded-2xl border border-white/20">
@@ -379,20 +347,15 @@ const App = () => {
                       </div>
                     )}
 
-                    {/* ── RUNNING: live progress bar ── */}
                     {genStatus === 'running' && (
                       <div className="space-y-6 animate-fadeIn">
                         <p className="text-2xl font-bold text-white/90 text-center">Generating Reports…</p>
                         <p className="text-white/40 text-sm text-center">
                           Please keep this tab open. Large classes may take a few minutes.
                         </p>
-
-                        {/* Progress bar */}
                         <div className="space-y-3">
                           <div className="flex justify-between text-sm font-bold text-white/60 uppercase tracking-widest">
-                            <span>
-                              {genCurrentName ? `Processing: ${genCurrentName}` : 'Analysing Patterns'}
-                            </span>
+                            <span>{genCurrentName ? genCurrentName : 'Analysing Patterns'}</span>
                             <span>{genProgress} / {genTotal} &nbsp;({pct}%)</span>
                           </div>
                           <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
@@ -402,8 +365,6 @@ const App = () => {
                             ></div>
                           </div>
                         </div>
-
-                        {/* Animated dots */}
                         <p className="text-center text-white/30 text-sm font-medium tracking-wide">
                           AI is analysing each student
                           <span className="inline-flex gap-0.5 ml-1">
@@ -415,7 +376,6 @@ const App = () => {
                       </div>
                     )}
 
-                    {/* ── DONE: download button ── */}
                     {genStatus === 'done' && (
                       <div className="flex flex-col items-center gap-6 animate-fadeIn">
                         <div className="p-4 rounded-xl text-byte-green bg-byte-green/10 border border-byte-green/30 text-lg font-bold">
@@ -443,7 +403,6 @@ const App = () => {
                       </div>
                     )}
 
-                    {/* ── ERROR ── */}
                     {genStatus === 'error' && (
                       <div className="flex flex-col items-center gap-4 animate-fadeIn">
                         <div className="p-4 rounded-xl text-red-400 bg-red-500/10 border border-red-500/30 text-sm font-bold w-full text-center">
@@ -461,9 +420,6 @@ const App = () => {
                   </div>
                 </section>
 
-                {/* ══════════════════════════════════════════
-                    ABOUT SECTION
-                ══════════════════════════════════════════ */}
                 <section id="about" className="space-y-16 py-20">
                   <SectionHeading subtitle="ByTE is more than just a converter; it's an intelligent reporting engine designed for educators.">
                     What is ByTE?
@@ -505,9 +461,6 @@ const App = () => {
                   </div>
                 </section>
 
-                {/* ══════════════════════════════════════════
-                    HOW IT WORKS
-                ══════════════════════════════════════════ */}
                 <section id="how-it-works" className="space-y-16">
                   <SectionHeading subtitle="Three simple steps to professional reporting.">How it Works</SectionHeading>
                   <div className="grid md:grid-cols-3 gap-8 relative">
@@ -526,9 +479,6 @@ const App = () => {
                   </div>
                 </section>
 
-                {/* ══════════════════════════════════════════
-                    FEATURES & STATS
-                ══════════════════════════════════════════ */}
                 <section className="space-y-16 py-10">
                   <div className="grid md:grid-cols-4 gap-8">
                     {[
@@ -550,9 +500,6 @@ const App = () => {
                   </div>
                 </section>
 
-                {/* ══════════════════════════════════════════
-                    CONTACT
-                ══════════════════════════════════════════ */}
                 <section id="contact-us" className="space-y-16 py-20 pb-40">
                   <SectionHeading subtitle="Have questions or need technical support? We're here to help.">Get In Touch</SectionHeading>
                   <form onSubmit={handleContactSubmit} className="glass-upload p-12 max-w-[800px] mx-auto text-left space-y-8 animate-on-scroll">

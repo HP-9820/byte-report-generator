@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://byte-report-generator.onrender.com';
+
 const VerifyEmail = () => {
     const [status, setStatus] = useState({ type: 'info', message: 'Verifying your email...' });
 
@@ -14,7 +16,7 @@ const VerifyEmail = () => {
 
         const verifyToken = async () => {
             try {
-                const response = await fetch(`http://localhost:8000/verify-email?token=${token}`);
+                const response = await fetch(`${API_URL}/verify-email?token=${token}`);
                 const data = await response.json();
                 if (response.ok) {
                     setStatus({ type: 'success', message: data.message || 'Email verified successfully!' });

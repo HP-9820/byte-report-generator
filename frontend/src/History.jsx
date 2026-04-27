@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 
+const API_BASE = 'https://byte-report-generator.onrender.com';
+
+
 const History = ({ token }) => {
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -9,7 +12,8 @@ const History = ({ token }) => {
     useEffect(() => {
         const fetchReports = async () => {
             try {
-                const response = await fetch('http://localhost:8000/my-reports', {
+                const API_BASE = 'https://byte-report-generator.onrender.com';
+                const response = await fetch(`${API_BASE}/my-reports`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }

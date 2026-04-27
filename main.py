@@ -72,7 +72,6 @@ INTEREST_LEVEL_SYNONYMS = {
 def get_interest_label(score):
     if score is None:
         return random.choice(INTEREST_LEVEL_SYNONYMS["NA"])
-    
     if score >= 85:
         return random.choice(INTEREST_LEVEL_SYNONYMS["HIGH"])
     elif score >= 60:
@@ -84,11 +83,11 @@ def get_interest_label(score):
     else:
         return random.choice(INTEREST_LEVEL_SYNONYMS["EARLY"])
 
+
 # =========================
 # DOCX TABLE STYLING HELPERS
 # =========================
 def style_table_header(row, bg_color="1F5E78", text_color=RGBColor(255, 255, 255)):
-    """Applies background color and white bold text to a header row."""
     for cell in row.cells:
         tc_pr = cell._tc.get_or_add_tcPr()
         shd = OxmlElement("w:shd")
@@ -126,60 +125,43 @@ def add_formatted_text_with_bold(cell, text):
     Converts **text** into actual bold runs.
     """
     paragraph = cell.paragraphs[0] if cell.paragraphs else cell.add_paragraph()
-    paragraph.clear()  # Clear existing content
-    
-    # Split by ** markers
+    paragraph.clear()
     parts = text.split('**')
-    
     for i, part in enumerate(parts):
-        if not part:  # Skip empty parts
+        if not part:
             continue
         run = paragraph.add_run(part)
         run.font.size = Pt(9)
-        # Odd indices are between ** markers (should be bold)
         if i % 2 == 1:
             run.bold = True
 
-def format_single_point(cell, text):
+def format_all_points(cell, text):
     """
-    Formats text to show only the first point from a numbered list.
-    Extracts just the first item and removes any extra numbering.
+    Formats all 3 numbered actions from support_activities into separate lines.
+    Splits by semicolon and renders each as its own paragraph.
     """
-    # Clear existing content
     cell._element.clear_content()
-    
-    # Extract just the first point (before the first semicolon)
+
     if ';' in text:
-        first_point = text.split(';')[0].strip()
+        points = [p.strip() for p in text.split(';') if p.strip()]
     else:
-        first_point = text.strip()
-    
-    # Remove any leading numbers like "1." or "1" if they exist
-    cleaned_point = re.sub(r'^\d+\.?\s*', '', first_point)
-    
-    # Add as a single paragraph
-    p = cell.add_paragraph()
-    p.paragraph_format.space_after = Pt(3)
-    
-    # Add the cleaned text (without the number)
-    run = p.add_run(cleaned_point)
-    run.font.size = Pt(9)
+        points = [text.strip()]
+
+    for point in points:
+        p = cell.add_paragraph()
+        p.paragraph_format.space_after = Pt(3)
+        p.paragraph_format.space_before = Pt(1)
+        run = p.add_run(point)
+        run.font.size = Pt(8.5)
 
 def create_bordered_paragraph(cell, text, bold=False):
-    """
-    Creates a bordered paragraph cell for the Notes section.
-    """
     paragraph = cell.paragraphs[0] if cell.paragraphs else cell.add_paragraph()
     paragraph.clear()
-    
     run = paragraph.add_run(text)
     run.font.size = Pt(10)
     if bold:
         run.bold = True
-    
-    # Add border to the cell
     tc_pr = cell._tc.get_or_add_tcPr()
-    
     for border_side in ['top', 'left', 'bottom', 'right']:
         border = OxmlElement(f'w:{border_side}')
         border.set(qn('w:val'), 'single')
@@ -187,88 +169,74 @@ def create_bordered_paragraph(cell, text, bold=False):
         border.set(qn('w:color'), '000000')
         tc_pr.append(border)
 
+
 # =========================
 # SPIDER CHART GENERATION
 # =========================
 def create_spider_chart(student_data, class_avg_data):
-    """
-    Creates a spider/radar chart comparing student performance vs class average.
-    Returns a BytesIO object containing the PNG image.
-    """
     try:
         activities = []
         student_scores = []
         class_scores = []
-        
+
         for activity, details in student_data["activities"].items():
             score = details.get("average")
             if activity.lower() == "others" and (score is None or score == 0):
                 continue
-                
             activities.append(activity)
             student_scores.append(round(score) if score is not None else 0)
-            
             class_item = class_avg_data.get(activity, 0)
             if isinstance(class_item, dict):
                 class_score = class_item.get("average", 0)
             else:
                 class_score = class_item
             class_scores.append(round(class_score) if class_score else 0)
-        
+
         if len(activities) < 2:
             print("   ⚠️ Not enough activities for spider chart (need at least 2)")
             return None
-        
+
         num_vars = len(activities)
         angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
-        
         student_scores_plot = student_scores + student_scores[:1]
         class_scores_plot = class_scores + class_scores[:1]
         angles_plot = angles + angles[:1]
-        
+
         fig, ax = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True))
         fig.patch.set_alpha(0)
         ax.set_facecolor('none')
-        
         ax.set_theta_offset(np.pi / 2)
         ax.set_theta_direction(-1)
-        
         ax.set_xticks(angles)
         ax.set_xticklabels(activities, size=9, weight='bold')
         ax.tick_params(axis='x', pad=25)
-        
         ax.set_rlabel_position(0)
         ax.set_yticks([25, 50, 75, 100])
         ax.set_yticklabels(['25', '50', '75', '100'], size=8, color='gray')
         ax.set_ylim(0, 100)
-        
         ax.grid(True, linestyle='--', color='gray', alpha=0.5, linewidth=1.2)
         ax.spines['polar'].set_linewidth(2.0)
         ax.spines['polar'].set_color('#333333')
-        
-        ax.plot(angles_plot, student_scores_plot, linewidth=2.5, marker='o', 
+        ax.plot(angles_plot, student_scores_plot, linewidth=2.5, marker='o',
                 label='Student average', color='#4472C4', markersize=6)
         ax.fill(angles_plot, student_scores_plot, alpha=0.25, color='#4472C4')
-        
-        ax.plot(angles_plot, class_scores_plot, linewidth=2.5, marker='o', 
+        ax.plot(angles_plot, class_scores_plot, linewidth=2.5, marker='o',
                 label='Class average', color='#ED7D31', markersize=6)
         ax.fill(angles_plot, class_scores_plot, alpha=0.15, color='#ED7D31')
-        
-        legend = ax.legend(loc='upper right', bbox_to_anchor=(1.25, 1.1), 
-                          frameon=False, fontsize=9)
-        
+        ax.legend(loc='upper right', bbox_to_anchor=(1.25, 1.1), frameon=False, fontsize=9)
+
         img_buffer = BytesIO()
-        plt.savefig(img_buffer, format='png', dpi=200, bbox_inches='tight', 
-                   transparent=True, pad_inches=0.1)
+        plt.savefig(img_buffer, format='png', dpi=200, bbox_inches='tight',
+                    transparent=True, pad_inches=0.1)
         img_buffer.seek(0)
-        
         return img_buffer
-        
+
     except Exception as e:
         print(f"   ⚠️ Error creating spider chart: {e}")
         return None
     finally:
         plt.close('all')
+
 
 # =========================
 # LLM ANALYSIS
@@ -278,9 +246,7 @@ def generate_llm_analysis(student_data, student_name, class_name):
     raw_student_data = "Activity | Score | Interest Level | Feedback\n"
     for activity, details in student_data["activities"].items():
         score = round(details["average"]) if details.get("average") is not None else None
-        
         interest_label = get_interest_label(score)
-        
         score_text = f"{score}%" if score is not None else "-"
         feedbacks = "; ".join(details["feedbacks"][:5]) if details.get("feedbacks") else "No specific feedback recorded"
         raw_student_data += f"{activity} | {score_text} | {interest_label} | {feedbacks}\n"
@@ -335,7 +301,6 @@ CRITICAL RULES
 • Do NOT rephrase, explain, or substitute
 
 -------------------------------------------------
-
 2) OBSERVATIONS (MANDATORY)
 • Every subject and activity in the data must appear
 • Write 1–2 simple sentences per area
@@ -343,38 +308,51 @@ CRITICAL RULES
 • Do NOT compare with other students
 
 -------------------------------------------------
-
--------------------------------------------------
 3) RECOMMENDATIONS (TOP 2 ONLY – WITH PARENT ACTIONABILITY)
 
 Select ONLY the top 2 highest engagement areas.
 
 -------------------------------------------------
-3.1 ACTIVITY-ONLY RULE
+3.1 SELECTION RULE
 -------------------------------------------------
-• Recommendations MUST be based ONLY on the specific activity name (e.g., "Computers", "Sports", "Arts").
-• Do NOT combine activities with Academics in the first column or title of the recommendation.
-• Even if Academics appears in the top scores, treat it as its own area or prioritize the next highest non-academic activity if "Academic + Activity" was previously requested.
-• Clearly explain how the activity supports overall learning in the description, but keep the header focused on the activity itself.
+• Recommendations MUST be based on the TOP 2 areas by engagement score — this includes Academics if it ranks in the top 2.
+• If Academics has the highest engagement score, it MUST appear as the first recommendation.
+• For Academics recommendations, focus on the specific subjects where the student excels (e.g., Mathematics, Science) and career paths those subjects lead to.
+• Do NOT skip or deprioritize Academics simply because it is an academic subject.
+• Keep each recommendation header focused on the single area name only (e.g., "Academics", "Computers").
 
 -------------------------------------------------
 3.2 CLASS-BASED CAREER GUIDANCE
 -------------------------------------------------
 
-For Classes 3–5:
-• Do NOT mention job titles
+For Classes 3–5 (ALL areas including Academics):
+• Do NOT mention specific job titles
 • Focus on exposure, confidence, habits, and skill discovery
 • Career direction must remain broad and future-facing
+• For Academics: Highlight the joy of learning, curiosity, and subject strengths
+• Mention broad fields like "science and discovery", "numbers and logic",
+  "reading and writing" — NOT specific roles like "Doctor" or "Engineer"
+• Encourage subject-based clubs, olympiads, or hobby reading
 
-For Classes 6–7:
+For Classes 6–7 (ALL areas including Academics):
 • Introduce career fields (not final roles)
-• Explain how current interests connect to these fields
-• Suggest structured learning, clubs, or guided practice
+• Explain how current academic strengths connect to career fields
+• For Academics (Science): Mention fields like medicine, engineering, research
+• For Academics (Maths): Mention fields like finance, technology, data
+• For Academics (Social): Mention fields like law, civil services, journalism
+• For Academics (Languages): Mention fields like media, writing, communications
+• Suggest structured learning, subject olympiads, clubs, or guided practice
 
-For Classes 8–9:
+For Classes 8–9 (ALL areas including Academics):
 • Mention specific career paths where relevant
+• For Academics: Clearly connect strong subjects to specific career streams
+  - Science → Medicine, Engineering, Research, Biotechnology
+  - Maths → Data Science, Finance, Software, Architecture
+  - Social → Civil Services, Law, Journalism, International Relations
+  - Languages → Media, Publishing, Diplomacy, Content Creation
 • Keep tone supportive and non-pressurizing
-• Emphasize readiness, not final decisions
+• Emphasize stream selection readiness (Science/Commerce/Arts) where appropriate
+• Reinforce that strong academics opens doors across ALL career fields
 
 -------------------------------------------------
 3.3 FORMATTING REQUIREMENTS (STRICT)
@@ -385,12 +363,62 @@ CAREER PATHWAYS FORMAT:
 • List 3-5 specific career paths in BOLD using **Career Name** format
 • Keep descriptions practical and realistic
 • Connect careers logically to the student's interests
+• ALWAYS pick careers from the CAREER COMBINATION KNOWLEDGE BASE below
+• Never invent career names not listed in the knowledge base
 
-Example Format:
-"This well-developed interest can lead to diverse career paths in sports. Exploring **coaching**, **sports management**, **sports journalism**, or even **professional athleticism** is possible. Developing strong teamwork and leadership skills also benefits many other fields."
+CAREER SELECTION BY CLASS LEVEL (STRICT):
+
+For Classes 3–5:
+• Pick only BROAD, easy-to-understand career categories
+• Avoid technical job titles like "DevOps Engineer" or "Actuary"
+• Use approachable titles: **Sports Coach**, **Doctor**, **Artist**, **Teacher**
+• Focus on what the child DOES, not the job title
+
+For Classes 6–7:
+• Introduce career fields with simple names
+• Acceptable: **Software Developer**, **Sports Manager**, **Graphic Designer**
+• Avoid highly technical titles like **Quant Analyst**, **IES Officer**
+• Briefly explain what each career involves in one phrase
+
+For Classes 8–9:
+• Use specific career titles from the knowledge base
+• Acceptable: **AI/ML Engineer**, **Civil Servant (IAS/IPS/IFS)**, **Chartered Accountant**
+• Connect each career to a specific skill or subject strength
+• Mention entrance exams or degree paths where relevant (JEE, NEET, CLAT, UPSC)
+
+CAREER CATEGORY GUIDE (use to pick age-appropriate careers):
+
+EASY (Classes 3–5): Sports Coach, Doctor, Artist, Teacher, Chef, Farmer, Pilot,
+Nurse, Designer, Fitness Trainer
+
+MODERATE (Classes 6–7): Software Developer, Graphic Designer, Sports Manager,
+Game Designer, Content Creator, Marketing Manager, School Teacher,
+Environmental Scientist, Fashion Designer, Event Planner, Animator/VFX Artist
+
+ADVANCED (Classes 8–9): AI/ML Engineer, Civil Servant (IAS/IPS/IFS),
+Chartered Accountant, Investment Banker, Robotics/Mechatronics Engineer,
+Lawyer/Advocate, Cybersecurity Analyst, FinTech Product Manager,
+Clinical Psychologist, Actuary, Public Policy Analyst, Commercial Pilot,
+Indian Forest Service Officer, Biotechnologist, Healthcare Administrator
+
+Example Format (Class 8–9):
+"Strong academic performance opens many exciting career paths. Exploring
+**AI/ML Engineer**, **Biotechnologist**, **Civil Servant (IAS/IPS/IFS)**,
+or **Chartered Accountant** is very possible. Each of these paths rewards
+hard work, curiosity, and strong subject knowledge."
+
+Example Format (Class 6–7):
+"This growing interest in computers can lead to exciting fields.
+Exploring **Software Developer**, **Game Designer**, **Graphic Designer**,
+or **Content Creator** could be great directions. These fields reward
+creativity and logical thinking."
+
+Example Format (Class 3–5):
+"This love for drawing can open many wonderful paths.
+Exploring **Artist**, **Designer**, **Teacher**, or **Chef** is possible.
+Trying new activities and building confidence is what matters most now."
 
 -------------------------------------------------
-
 PARENT ACTIONABILITY RULE (MANDATORY):
 -------------------------------------------------
 
@@ -416,84 +444,148 @@ CLASS-WISE EXPECTATIONS:
 For Classes 3–5:
 • Focus on habit building, confidence, and exposure
 • Suggest hobby classes, simple home routines, and school-level participation
+• For Academics: Suggest subject reading books, math puzzles, science
+  experiment kits, story writing habits
 • Avoid exams, certifications, or career pressure
 
 For Classes 6–7:
 • Focus on structured learning and skill strengthening
 • Suggest guided classes, small projects, competitions, or clubs
-• Introduce career fields indirectly
+• For Academics: Suggest subject olympiads (Math/Science), debate clubs,
+  science fairs, book clubs, quiz competitions
+• Introduce career fields indirectly through subject strengths
 
 For Classes 8–9:
 • Focus on preparation and clarity
-• Suggest foundation courses, portfolios, mentoring, or academies
-• Clearly connect actions to future career paths
+• For Academics: Suggest foundation courses (JEE/NEET/CLAT foundation),
+  subject mentoring, competitive exam exposure, stream selection guidance
+• Suggest portfolios, mentoring, or academies where relevant
+• Clearly connect strong academic subjects to future career paths and
+  stream choices (Science / Commerce / Arts)
 
 -------------------------------------------------
-5) HOW PARENTS CAN HELP: PARENT TIPS (REPLACEMENT)
+5) HOW PARENTS CAN HELP: PARENT TIPS
 -------------------------------------------------
-Provide exactly 3 high-quality tips in the "parent_tips" field. 
+Provide exactly 3 high-quality tips in the "parent_tips" field.
 Use this specific style (combining activity context with practical timing):
 
-Style Examples:
-1. Weekend Exploration (Computers): Dedicate a weekend afternoon to a fun, structured online lesson that teaches basic data organization or typing skills, connecting it to the interest in data entry.
-2. Short Daily Practice (Drawing): Encourage 15 minutes of sketching simple objects or geometric shapes in the evening to maintain the interest in exact measurements and shading techniques.
-3. Encourage and Talk: Dedicate 10–15 minutes weekly to talk about what excites your child and offer your appreciation for their efforts in these activities.
+Style Examples for Academics as top interest:
+1. Weekend Exploration (Academics - Science): Dedicate a weekend afternoon
+   to a fun science experiment at home using simple kitchen materials to
+   strengthen curiosity and hands-on learning in science.
+2. Short Daily Practice (Computers): Encourage 15 minutes of typing practice
+   or a simple coding activity to build logical thinking alongside academic strengths.
+3. Encourage and Talk: Dedicate 10–15 minutes weekly to ask about favorite
+   subjects, what new things were learned, and celebrate small academic wins.
+
+Style Examples for non-academic top interest:
+1. Weekend Exploration (Computers): Dedicate a weekend afternoon to a fun,
+   structured online lesson that teaches basic data organization or typing
+   skills, connecting it to the interest in data entry.
+2. Short Daily Practice (Drawing): Encourage 15 minutes of sketching simple
+   objects or geometric shapes in the evening to maintain the interest in
+   exact measurements and shading techniques.
+3. Encourage and Talk: Dedicate 10–15 minutes weekly to talk about what
+   excites your child and offer your appreciation for their efforts.
 
 Requirements for the 3 tips:
-- Tip 1: Should be a "Weekend Exploration" related to the child's top interest.
-- Tip 2: Should be a "Short Daily Practice" (15 mins) related to the child's second interest.
-- Tip 3: Should be a "Encourage and Talk" tip (10-15 mins weekly).
+• Tip 1: "Weekend Exploration" — related to the child's TOP interest area.
+  For Academics: connect to the strongest subject (Science/Maths/Social/Languages).
+  For others: connect to the specific activity.
+• Tip 2: "Short Daily Practice" (15 mins) — related to the SECOND interest area.
+• Tip 3: "Encourage and Talk" — 10–15 minutes weekly, warm and encouraging tone.
+
+CLASS-WISE TIP CALIBRATION:
+• Classes 3–5: Simple, fun, home-based activities. No exam pressure.
+• Classes 6–7: Structured practice, clubs, olympiads, online learning.
+• Classes 8–9: Foundation courses, competitive exam prep, mentoring sessions.
 
 -------------------------------------------------
 6) CONCLUSION
-• Write a warm, reassuring summary
+-------------------------------------------------
+• Write a warm, reassuring 3–4 sentence summary
 • Emphasize steady growth and natural strengths
 • Reinforce that exploration is healthy at this stage
+• Mention both top interest areas briefly
 • Do NOT mention the class name directly
+• End with an encouraging note for parents
 
 -------------------------------------------------
 CAREER COMBINATION KNOWLEDGE BASE
 -------------------------------------------------
 
-Use the following subject + activity combinations to populate the "subject_career_combinations" field.
-Only include combinations when BOTH the activity AND a related academic subject show strong engagement.
+Use the combinations below to populate "future_pathways" and "subject_career_combinations".
+All careers listed are real, India-relevant, and verified.
 
-SPORTS COMBINATIONS:
-• Sports + Science: Sports Scientist, Physiotherapist, Sports Nutritionist, Strength & Conditioning Coach, Exercise Physiologist
-• Sports + Maths: Sports Data Analyst, Performance Analyst, Sports Statistics Expert
-• Sports + Languages: Sports Journalist, Sports Commentator, Sports Content Creator, Sports PR & Media Manager
-• Sports + Social: Sports Administrator, Sports Policy Analyst, Sports Management Professional, Community Sports Officer
+ACADEMICS COMBINATIONS:
+• Academics (Science) + Computers: AI/ML Engineer, Data Scientist/Analyst, Biotechnologist, Health Informatics Specialist, Robotics/Mechatronics Engineer, AR/VR Developer, DevOps Engineer
+• Academics (Science) + Arts: Healthcare Administrator, Environmental Scientist, Nutritionist/Dietician, Hardware Product Designer, EdTech Content Creator, Veterinarian
+• Academics (Science) + Sports: Sports Data Analyst, Fitness Trainer/Instructor, Occupational Therapist, Clinical Psychologist, Nutritionist/Dietician, Biotechnologist
+• Academics (Science) + Library: Specialist Doctor, Pharmacist, Environmental Scientist, Public Policy Analyst, Indian Forest Service Officer, Indian Economic Service Officer
+• Academics (Maths) + Computers: Software Developer (Full-Stack), AI/ML Engineer, Cybersecurity Analyst, Blockchain Developer, Cloud Architect/Engineer, FinTech Product Manager, Actuary
+• Academics (Maths) + Arts: UI/UX Designer, Animator/VFX Artist, Hardware Product Designer, Game Designer/Developer, Jewellery Designer, AR/VR Developer
+• Academics (Maths) + Sports: Sports Data Analyst, Actuary, Stock Trader/Equity Analyst, Logistics/Supply Chain Manager, Civil Engineer
+• Academics (Maths) + Library: Chartered Accountant, Financial Planner (CFP), Stock Trader/Equity Analyst, Actuary, Investment Banker, Indian Economic Service Officer
+• Academics (Social) + Library: Civil Servant (IAS/IPS/IFS), Lawyer/Advocate, Judge, Public Policy Analyst, Indian Economic Service Officer, NGO Worker/Social Worker
+• Academics (Social) + Sports: Sports Manager/Agent, Civil Servant (IAS/IPS/IFS), NGO Worker/Social Worker, Corporate Trainer, Armed Forces Officer
+• Academics (Social) + Arts: Fashion Designer, Event Planner, Marketing Manager, Corporate Trainer, EdTech Content Creator
+• Academics (Social) + Computers: Management Consultant, Human Resources Manager, Product Manager, Marketing Manager, FinTech Product Manager
+• Academics (Languages) + Library: Lawyer/Advocate, Professor/Lecturer, School Teacher, EdTech Content Creator, Public Policy Analyst, Corporate Trainer
+• Academics (Languages) + Arts: Content Creator, Event Planner, Marketing Manager, Corporate Trainer, EdTech Content Creator
+• Academics (Languages) + Computers: Product Manager, Marketing Manager, EdTech Content Creator, Corporate Trainer, Human Resources Manager
+• Academics (Languages) + Social: Civil Servant (IAS/IPS/IFS), Lawyer/Advocate, NGO Worker/Social Worker, School Teacher, Special Educator
+
+SPORTS / GAMES COMBINATIONS:
+• Sports + Science: Sports Data Analyst, Fitness Trainer/Instructor, Occupational Therapist, Nutritionist/Dietician, Clinical Psychologist, Biotechnologist
+• Sports + Maths: Sports Data Analyst, Actuary, Logistics/Supply Chain Manager, Esports Athlete/Manager, Financial Planner (CFP)
+• Sports + Languages: Sports Manager/Agent, Content Creator, Corporate Trainer, Marketing Manager, School Teacher
+• Sports + Social: Sports Manager/Agent, Civil Servant (IAS/IPS/IFS), NGO Worker/Social Worker, Armed Forces Officer, Event Planner
+• Sports + Computers: Sports Data Analyst, Esports Athlete/Manager, AR/VR Developer, Game Designer/Developer, DevOps Engineer
+• Sports + Arts: Event Planner, Content Creator, Fashion Designer, Animator/VFX Artist, Tattoo Artist
 
 LIBRARY (READING/BOOKS) COMBINATIONS:
-• Library + Languages: Author/Writer, Editor/Publisher, Journalist, Scriptwriter, Content Strategist
-• Library + Social: Historian, Civil Services Officer, Political Analyst, Policy Researcher, Think-Tank Researcher
-• Library + Science: Research Scholar, Academic Scientist, Science Communicator, Science Writer
-• Library + Maths: Economist, Actuary, Data Research Analyst, Financial Analyst
+• Library + Languages: Lawyer/Advocate, Professor/Lecturer, School Teacher, EdTech Content Creator, Corporate Trainer, Content Creator
+• Library + Social: Civil Servant (IAS/IPS/IFS), Judge, Public Policy Analyst, NGO Worker/Social Worker, Indian Forest Service Officer
+• Library + Science: Specialist Doctor, Pharmacist, Environmental Scientist, Indian Forest Service Officer, Public Policy Analyst
+• Library + Maths: Chartered Accountant, Financial Planner (CFP), Investment Banker, Actuary, Indian Economic Service Officer
+• Library + Computers: EdTech Content Creator, Product Manager, Corporate Trainer, Health Informatics Specialist, Public Policy Analyst
+• Library + Arts: Content Creator, Event Planner, Fashion Designer, EdTech Content Creator, Corporate Trainer
 
 COMPUTERS COMBINATIONS:
-• Computers + Maths: Software Engineer, Data Scientist, AI/ML Engineer, Game Developer, Quant Analyst
-• Computers + Science: Robotics Engineer, Bioinformatics Specialist, Environmental Tech Analyst, Health-Tech Developer
-• Computers + Languages: Technical Writer, UX Writer, Product Manager, Digital Marketer, Instructional Designer
-• Computers + Social: Civic-Tech Specialist, GovTech Consultant, Digital Policy Analyst, Cyber Law Professional
+• Computers + Maths: Software Developer (Full-Stack), AI/ML Engineer, Cybersecurity Analyst, Blockchain Developer, FinTech Product Manager, Stock Trader/Equity Analyst
+• Computers + Science: Robotics/Mechatronics Engineer, Biotechnologist, Health Informatics Specialist, AR/VR Developer, Cloud Architect/Engineer
+• Computers + Languages: Product Manager, Marketing Manager, EdTech Content Creator, Corporate Trainer, Content Creator
+• Computers + Social: Management Consultant, Human Resources Manager, Product Manager, FinTech Product Manager, SSC Officer
+• Computers + Arts: UI/UX Designer, Game Designer/Developer, AR/VR Developer, Animator/VFX Artist, Hardware Product Designer
+• Computers + Sports: Sports Data Analyst, Esports Athlete/Manager, Game Designer/Developer, AR/VR Developer, Fitness Trainer/Instructor
 
-ARTS (Drawing, Music, Dance, Design) COMBINATIONS:
-• Arts + Languages: Filmmaker, Lyricist, Screenwriter, Theatre Artist, Creative Director
-• Arts + Social: Fashion Designer, Cultural Researcher, Interior Designer, Heritage Conservationist
-• Arts + Science: Medical Illustrator, Industrial Designer, Product Designer
-• Arts + Maths: Architect, UI/UX Designer, Animation & VFX Artist, Game Designer
+ARTS / DRAWING COMBINATIONS:
+• Arts + Languages: Content Creator, Marketing Manager, Event Planner, EdTech Content Creator, Corporate Trainer
+• Arts + Social: Fashion Designer, Event Planner, Marketing Manager, Sustainability Manager, NGO Worker/Social Worker
+• Arts + Science: Hardware Product Designer, AR/VR Developer, Animator/VFX Artist, Jewellery Designer, Tattoo Artist
+• Arts + Maths: UI/UX Designer, Animator/VFX Artist, Game Designer/Developer, Jewellery Designer, Civil Engineer
+• Arts + Computers: UI/UX Designer, Game Designer/Developer, AR/VR Developer, Animator/VFX Artist, Graphic Designer
+• Arts + Sports: Event Planner, Content Creator, Fashion Designer, Tattoo Artist, Marketing Manager
 
-MUSIC/DANCE COMBINATIONS:
-• Music + Languages: Lyricist, Music Journalist, Radio Jockey, Podcast Host, Music Educator
-• Music + Maths: Sound Engineer, Music Producer, Audio Technology Specialist
-• Dance + Science: Dance Therapist, Movement Analyst, Fitness Choreographer
-• Dance + Social: Cultural Program Coordinator, Dance Historian, Arts Administrator
+MUSIC / DANCE COMBINATIONS:
+• Music + Languages: Content Creator, Corporate Trainer, Marketing Manager, EdTech Content Creator, Event Planner
+• Music + Maths: EdTech Content Creator, Corporate Trainer, FinTech Product Manager, Event Planner, Content Creator
+• Music + Computers: Content Creator, AR/VR Developer, Game Designer/Developer, EdTech Content Creator, Marketing Manager
+• Music + Science: Occupational Therapist, Clinical Psychologist, Special Educator, Nutritionist/Dietician, Healthcare Administrator
+• Dance + Science: Occupational Therapist, Clinical Psychologist, Fitness Trainer/Instructor, Special Educator, Nutritionist/Dietician
+• Dance + Social: Event Planner, NGO Worker/Social Worker, Special Educator, Corporate Trainer, School Teacher
+• Dance + Languages: Content Creator, Corporate Trainer, Event Planner, EdTech Content Creator, Marketing Manager
+• Dance + Computers: Content Creator, AR/VR Developer, Game Designer/Developer, EdTech Content Creator, Event Planner
 
+-------------------------------------------------
 LOGIC FOR POPULATING "subject_career_combinations":
-1. Check if the student has high engagement in BOTH an activity (Sports, Library, Computers, Arts, Music, Dance) AND a related academic subject (Science, Maths, Languages, Social)
-2. If YES → Select 4-5 best-fit careers from the matching combination above
-3. If NO clear academic pairing → Leave this field as null or empty string
-4. Format as plain text list separated by commas (no bold, no bullets)
-5. Example output: "Sports Scientist, Physiotherapist, Sports Nutritionist, Strength & Conditioning Coach"
+-------------------------------------------------
+1. Check if the student has high engagement in BOTH an activity (Academics, Sports/Games, Library, Computers, Arts/Drawing, Music, Dance) AND a related second area
+2. For Academics → match the specific strong subject (Science, Maths, Social, Languages) from the feedback data with the second highest activity
+3. If YES → Select 4-5 best-fit careers from the matching combination above
+4. If NO clear pairing → Leave this field as null or empty string
+5. Format as plain text list separated by commas (no bold, no bullets)
+6. Example output: "Sports Data Analyst, Fitness Trainer/Instructor, Occupational Therapist, Nutritionist/Dietician"
 
 -------------------------------------------------
 OUTPUT FORMAT (JSON ONLY)
@@ -520,12 +612,7 @@ OUTPUT FORMAT (JSON ONLY)
   "conclusion": "Text"
 }}
 """
-    
-    # ─────────────────────────────────────────────
-    # FIX 1: Smarter retry — only sleep on real 429s
-    # Old code slept 60s on EVERY error which caused
-    # timeouts when called from the web server.
-    # ─────────────────────────────────────────────
+
     max_retries = 3
     for attempt in range(max_retries):
         try:
@@ -544,20 +631,20 @@ OUTPUT FORMAT (JSON ONLY)
         except Exception as e:
             print(f"   > API Error (Attempt {attempt+1}): {e}")
             if "429" in str(e):
-                # Exponential back-off: 30s → 60s → 90s
                 wait = 30 * (attempt + 1)
                 print(f"   > Rate limited. Waiting {wait}s before retry...")
                 time.sleep(wait)
             else:
-                # Short delay for non-rate-limit errors (network blip etc.)
                 time.sleep(2)
 
     return None, None
 
+
 # =========================
 # WORD REPORT CREATION
 # =========================
-def create_word_doc(student_name, analysis, class_name, student_data, class_avg_data, output_dir=None, doc=None, save=True, is_first=False):
+def create_word_doc(student_name, analysis, class_name, student_data, class_avg_data,
+                    output_dir=None, doc=None, save=True, is_first=False):
     if doc is None:
         doc = Document()
         sections = doc.sections
@@ -568,37 +655,39 @@ def create_word_doc(student_name, analysis, class_name, student_data, class_avg_
             section.right_margin = Inches(0.6)
     elif not is_first:
         doc.add_page_break()
-    
+
     target_folder = output_dir if output_dir else OUTPUT_FOLDER
-    
+
     # ========================================
-    # PAGE 1: STUDENT INFO, PURPOSE, KEY INSIGHTS, CHART, OBSERVATIONS
+    # STUDENT INFO TABLE
     # ========================================
-    
     info_table = doc.add_table(rows=2, cols=2)
     info_table.style = 'Table Grid'
     set_table_borders(info_table)
     set_column_widths(info_table, [Inches(1.2), Inches(5.8)])
-    
+
     info_table.rows[0].cells[0].text = "Name"
     info_table.rows[0].cells[1].text = student_name
     style_table_header(info_table.rows[0], bg_color="1F5E78")
-    
+
     info_table.rows[1].cells[0].text = "Class"
     info_table.rows[1].cells[1].text = class_name
-    
+
     for row in info_table.rows:
         for paragraph in row.cells[0].paragraphs:
             for run in paragraph.runs:
                 run.bold = True
-    
+
+    # ========================================
+    # PURPOSE
+    # ========================================
     purpose_heading = doc.add_heading("Purpose:", level=2)
     purpose_heading.style.font.size = Pt(11)
     purpose_heading.style.font.bold = True
     purpose_heading.style.font.color.rgb = RGBColor(0, 51, 102)
     purpose_heading.paragraph_format.space_before = Pt(2)
     purpose_heading.paragraph_format.space_after = Pt(1)
-    
+
     purpose_text = doc.add_paragraph(
         '"Skill Assessment Program - Building Strengths Beyond Academics "\n'
         'This report shows your child\'s interests and abilities in different school activities. '
@@ -607,21 +696,24 @@ def create_word_doc(student_name, analysis, class_name, student_data, class_avg_
     )
     purpose_text.style.font.size = Pt(9)
     purpose_text.paragraph_format.space_after = Pt(4)
-    
+
+    # ========================================
+    # KEY INSIGHTS + SPIDER CHART
+    # ========================================
     insights_heading = doc.add_heading("Key Insights:", level=2)
     insights_heading.style.font.size = Pt(11)
     insights_heading.style.font.bold = True
     insights_heading.style.font.color.rgb = RGBColor(0, 51, 102)
     insights_heading.paragraph_format.space_before = Pt(2)
     insights_heading.paragraph_format.space_after = Pt(1)
-    
+
     insights_text = doc.add_paragraph(
         'The graph below shows how your child is doing in different areas. It tells us what they like more and where we can '
-        'help them do even better. Blue represents your child, and red represents the class average.'
+        'help them do even better. Blue represents your child, and orange represents the class average.'
     )
     insights_text.style.font.size = Pt(9)
     insights_text.paragraph_format.space_after = Pt(2)
-    
+
     chart_img = create_spider_chart(student_data, class_avg_data)
     if chart_img:
         chart_para = doc.add_paragraph()
@@ -630,22 +722,27 @@ def create_word_doc(student_name, analysis, class_name, student_data, class_avg_
         chart_para.paragraph_format.space_after = Pt(4)
         run = chart_para.add_run()
         run.add_picture(chart_img, width=Inches(3.2))
-    
+
+    # ========================================
+    # OBSERVATIONS TABLE
+    # ========================================
     obs_heading = doc.add_heading("Observations:", level=2)
     obs_heading.style.font.size = Pt(11)
     obs_heading.style.font.bold = True
     obs_heading.style.font.color.rgb = RGBColor(0, 51, 102)
     obs_heading.paragraph_format.space_before = Pt(2)
     obs_heading.paragraph_format.space_after = Pt(1)
-    
+
     subtitle = doc.add_paragraph("The table gives an overview of child's involvement and performance across co-curricular areas.")
     subtitle.style.font.size = Pt(9)
     subtitle.paragraph_format.space_after = Pt(2)
-    
-    sorted_obs = sorted(analysis.get("observations", []), 
-                       key=lambda x: x.get('engagement', 0) if isinstance(x.get('engagement'), (int, float)) else -1, 
-                       reverse=True)
-    
+
+    sorted_obs = sorted(
+        analysis.get("observations", []),
+        key=lambda x: x.get('engagement', 0) if isinstance(x.get('engagement'), (int, float)) else -1,
+        reverse=True
+    )
+
     filtered_obs = []
     for obs in sorted_obs:
         if obs.get("activity", "").strip().lower() == "others":
@@ -653,7 +750,7 @@ def create_word_doc(student_name, analysis, class_name, student_data, class_avg_
             if eng is None or eng == 0:
                 continue
         filtered_obs.append(obs)
-    
+
     obs_table = doc.add_table(rows=1, cols=4)
     obs_table.style = 'Table Grid'
     set_table_borders(obs_table)
@@ -677,26 +774,25 @@ def create_word_doc(student_name, analysis, class_name, student_data, class_avg_
             for paragraph in cell.paragraphs:
                 for run in paragraph.runs:
                     run.font.size = Pt(8.5)
-    
+
     # ========================================
-    # PAGE 2: RECOMMENDATIONS, TIPS, CONCLUSION, NOTES
+    # RECOMMENDATIONS TABLE
     # ========================================
-    
     rec_heading = doc.add_heading("Recommendations & Growth Opportunities:", level=2)
     rec_heading.style.font.size = Pt(11)
     rec_heading.style.font.bold = True
     rec_heading.style.font.color.rgb = RGBColor(0, 51, 102)
     rec_heading.paragraph_format.space_before = Pt(2)
     rec_heading.paragraph_format.space_after = Pt(1)
-    
+
     rec_subtitle = doc.add_paragraph("Here are some ways to turn your child's interests into long-term strengths:")
     rec_subtitle.style.font.size = Pt(9)
     rec_subtitle.paragraph_format.space_after = Pt(2)
-    
+
     rec_table = doc.add_table(rows=1, cols=3)
     rec_table.style = 'Table Grid'
     set_table_borders(rec_table)
-    set_column_widths(rec_table, [Inches(1.8), Inches(3.2), Inches(3.0)])
+    set_column_widths(rec_table, [Inches(1.5), Inches(3.5), Inches(3.0)])
 
     hdr = rec_table.rows[0]
     hdr.cells[0].text = "Strong Interest Area"
@@ -708,53 +804,76 @@ def create_word_doc(student_name, analysis, class_name, student_data, class_avg_
 
     for rec in recs:
         row = rec_table.add_row().cells
-        
+
+        # Column 1: Area + score
         eng = rec.get("engagement")
         score_txt = f"\n({eng}%)" if isinstance(eng, (int, float)) else ""
         row[0].text = f"{rec.get('area', '')}{score_txt}"
-        
-        future_pathways = rec.get("future_pathways", "")
-        add_formatted_text_with_bold(row[1], future_pathways)
-        
-        support_activities = rec.get("support_activities", "")
-        format_single_point(row[2], support_activities)
-        
         for paragraph in row[0].paragraphs:
             for run in paragraph.runs:
                 run.font.size = Pt(8.5)
-    
-    space_para = doc.add_paragraph()
-    space_para.paragraph_format.space_after = Pt(4)
-    
+
+        # Column 2: Future pathways (bold) + subject career combinations
+        future_pathways = rec.get("future_pathways", "")
+        add_formatted_text_with_bold(row[1], future_pathways)
+
+        subject_combos = rec.get("subject_career_combinations")
+        if subject_combos and str(subject_combos).strip().lower() not in ["null", "none", ""]:
+            sep_para = row[1].add_paragraph()
+            sep_para.paragraph_format.space_after = Pt(2)
+
+            combo_para = row[1].add_paragraph()
+            label_run = combo_para.add_run("Combined Career Paths: ")
+            label_run.bold = True
+            label_run.font.size = Pt(8.5)
+            label_run.font.color.rgb = RGBColor(31, 94, 120)
+
+            combo_run = combo_para.add_run(str(subject_combos))
+            combo_run.font.size = Pt(8.5)
+            combo_run.italic = True
+
+        # Column 3: All 3 support activities on separate lines
+        support_activities = rec.get("support_activities", "")
+        format_all_points(row[2], support_activities)
+
+    # ========================================
+    # PARENT TIPS
+    # ========================================
+    doc.add_paragraph().paragraph_format.space_after = Pt(4)
+
     tips_heading = doc.add_heading("How Parents Can Help:", level=2)
     tips_heading.style.font.size = Pt(11)
     tips_heading.style.font.bold = True
     tips_heading.style.font.color.rgb = RGBColor(0, 51, 102)
     tips_heading.paragraph_format.space_before = Pt(2)
     tips_heading.paragraph_format.space_after = Pt(1)
-    
+
     for i, tip in enumerate(analysis.get("parent_tips", []), 1):
         tip_para = doc.add_paragraph(f"{i}. {tip}")
         tip_para.style.font.size = Pt(9)
         tip_para.paragraph_format.left_indent = Inches(0.2)
         tip_para.paragraph_format.space_after = Pt(3)
-    
-    space_para = doc.add_paragraph()
-    space_para.paragraph_format.space_after = Pt(4)
-    
+
+    # ========================================
+    # CONCLUSION
+    # ========================================
+    doc.add_paragraph().paragraph_format.space_after = Pt(4)
+
     conclusion_heading = doc.add_heading("Conclusion:", level=2)
     conclusion_heading.style.font.size = Pt(11)
     conclusion_heading.style.font.bold = True
     conclusion_heading.style.font.color.rgb = RGBColor(0, 51, 102)
     conclusion_heading.paragraph_format.space_before = Pt(2)
     conclusion_heading.paragraph_format.space_after = Pt(1)
-    
+
     conclusion_para = doc.add_paragraph(analysis.get("conclusion", ""))
     conclusion_para.style.font.size = Pt(9)
     conclusion_para.paragraph_format.space_after = Pt(4)
-    
-    space_para = doc.add_paragraph()
-    space_para.paragraph_format.space_after = Pt(4)
+
+    # ========================================
+    # NOTES
+    # ========================================
+    doc.add_paragraph().paragraph_format.space_after = Pt(4)
 
     notes_heading = doc.add_heading("Notes:", level=2)
     notes_heading.style.font.size = Pt(11)
@@ -783,64 +902,67 @@ def create_word_doc(student_name, analysis, class_name, student_data, class_avg_
     run2 = p2.add_run("Teachers' remarks:")
     run2.bold = True
     run2.font.size = Pt(10)
-    
+
     if not save:
         return doc
-        
-    safe_name = "".join([c for c in student_name if c.isalnum() or c==' ']).strip()
+
+    safe_name = "".join([c for c in student_name if c.isalnum() or c == ' ']).strip()
     output_path = f"{target_folder}/{safe_name}_Report.docx"
-    
+
     try:
         doc.save(output_path)
         print(f"✓ Saved: {safe_name}_Report.docx")
     except PermissionError:
         timestamp = int(time.time())
-        print(f"⚠️ WARNING: Could not save {safe_name}_Report.docx")
-        print(f"   Please close this file in Word and try again.")
+        print(f"⚠️  WARNING: Could not save {safe_name}_Report.docx — file may be open in Word.")
         alt_path = f"{target_folder}/{safe_name}_Report_{timestamp}.docx"
         doc.save(alt_path)
         print(f"✓ Saved as: {safe_name}_Report_{timestamp}.docx instead")
-        
+
     return doc
+
 
 # =========================
 # MAIN
 # =========================
 def main():
     print("--- Starting Report Generation ---")
-    
+
     # TEST MODE CONFIGURATION
-    TEST_MODE = True  # Set to False to process all students
-    MAX_STUDENTS = 5  # Number of students to process in test mode
-    
+    TEST_MODE = True   # Set to False to process all students
+    MAX_STUDENTS = 5   # Number of students to process in test mode
+
     if not os.path.exists(INPUT_FOLDER):
         print(f"❌ Error: {INPUT_FOLDER} folder not found!")
         return
-    
+
     if not os.path.exists(OUTPUT_FOLDER):
         os.makedirs(OUTPUT_FOLDER)
         print(f"✓ Created {OUTPUT_FOLDER} folder")
 
-    files = [f for f in os.listdir(INPUT_FOLDER) if f.endswith(('.xlsx', '.xls', '.csv')) and not f.startswith('~')]
-    
+    files = [
+        f for f in os.listdir(INPUT_FOLDER)
+        if f.endswith(('.xlsx', '.xls', '.csv')) and not f.startswith('~')
+    ]
+
     if not files:
         print(f"❌ Error: No Excel/CSV files found in {INPUT_FOLDER}")
         return
 
     input_path = os.path.join(INPUT_FOLDER, files[0])
     print(f"📂 Loading file: {files[0]}")
-    
+
     try:
         students, class_avg, internal_class = load_and_process_data(input_path)
     except Exception as e:
         print(f"❌ Error loading file: {e}")
         return
-    
+
     if TEST_MODE:
         original_count = len(students)
         students = students[:MAX_STUDENTS]
         print(f"🧪 TEST MODE: Processing {len(students)} of {original_count} students")
-    
+
     final_class_name = internal_class if internal_class else os.path.splitext(files[0])[0]
     print(f"📚 Class Name: {final_class_name}")
     print(f"👥 Total Students to Process: {len(students)}")
@@ -849,30 +971,23 @@ def main():
     for idx, student in enumerate(students, 1):
         name = student.get('name', 'Unknown')
         print(f"\n[{idx}/{len(students)}] Processing: {name}")
-        
+
         try:
             analysis, meta = generate_llm_analysis(student, name, final_class_name)
-            
+
             if analysis:
                 create_word_doc(name, analysis, final_class_name, student, class_avg)
             else:
                 print(f"❌ Failed to generate analysis for: {name}")
-        
+
         except Exception as e:
             print(f"❌ Error processing {name}: {e}")
             continue
 
-        # ─────────────────────────────────────────────
-        # FIX 2: REMOVED the blanket 60s sleep between
-        # every student. That was causing server timeouts
-        # with large classes (35 students = 35 min wait).
-        # The exponential back-off in generate_llm_analysis
-        # handles real rate-limit errors automatically.
-        # ─────────────────────────────────────────────
-    
     print("\n" + "=" * 50)
     print("✅ Report generation complete!")
     print(f"📁 Output saved to: {OUTPUT_FOLDER}/")
+
 
 if __name__ == "__main__":
     main()
