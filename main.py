@@ -522,193 +522,58 @@ IMPORTANT RULES:
 - Output should feel exploratory
 - Return only 4–5 careers
 
----------------------------------------------------
-CAREER DATABASE
----------------------------------------------------
-
-SCIENCE:
-Doctor
-Research Scientist
-Biotechnologist
-Pharmacist
-Environmental Scientist
-Veterinarian
-Nutritionist
-
-MATHEMATICS:
-Software Developer
-Data Scientist
-AI Engineer
-Actuary
-Financial Analyst
-Civil Engineer
-
-SOCIAL STUDIES:
-Civil Servant
-Lawyer
-Judge
-Policy Analyst
-Historian
-NGO Leader
-
-LANGUAGES:
-Author
-Journalist
-Teacher
-Lawyer
-Editor
-Public Speaker
+CAREER PATHS BY ACTIVITY:
 
 COMPUTERS:
-Software Developer
-AI Engineer
-Cybersecurity Analyst
-Game Developer
-Product Manager
-Cloud Engineer
+- Government: ISRO Scientist, DRDO Scientist, NIC Officer, Defence Cybersecurity Officer
+- Private: Software Engineer, Cybersecurity Analyst, AI/ML Engineer, Cloud Engineer
+- Entrepreneurship: Tech Startup Founder, Freelance Developer, SaaS Product Builder, Game Developer
 
-SPORTS:
-Athlete
-Sports Coach
-Sports Manager
-Fitness Trainer
-Sports Analyst
+SPORTS & GAMES:
+- Government: Armed Forces Officer, Police Officer (IPS), Sports Authority of India Coach, Physical Education Officer
+- Private: Professional Athlete, Sports Data Analyst, Esports Manager, Fitness Trainer
+- Entrepreneurship: Gym Owner, Sports Academy Founder, Fitness Influencer, Esports Athlete
 
-LIBRARY:
-Author
-Professor
-Researcher
-Journalist
-Historian
+LIBRARY (READING/BOOKS):
+- Government: IAS Officer, Judge/Judicial Officer, Indian Economic Service Officer, Policy Officer
+- Private: Author, Journalist, Policy Analyst, Economist
+- Entrepreneurship: Educational Content Creator, Blogger/Newsletter Creator, Independent Research Consultant, Publishing Startup
 
-ARTS:
-Graphic Designer
-Animator
-Architect
-Fashion Designer
-Product Designer
+DRAWING & ART:
+- Government: Architect (Government Projects), Design Officer (Public Sector), Art Teacher, Cultural Department Artist
+- Private: UI/UX Designer, Animator/VFX Artist, Graphic Designer, Product Designer
+- Entrepreneurship: Digital Illustrator, Fashion Designer, Interior Designer, Creative Studio Founder
 
-MUSIC:
-Music Producer
-Singer
-Composer
-Sound Engineer
+ACADEMICS (SCIENCE):
+- Government: ISRO/DRDO Scientist, Indian Forest Service Officer, Government Doctor, Research Scientist
+- Private: Specialist Doctor, Biotechnologist, Environmental Scientist, Engineer
+- Entrepreneurship: Private Clinic Owner, HealthTech Startup Founder, AgriTech Entrepreneur, Science Educator
 
-DANCE:
-Choreographer
-Dance Instructor
-Performer
+ACADEMICS (MATHEMATICS):
+- Government: Indian Statistical Service Officer, RBI Officer, PSU Finance Manager, Banking Officer
+- Private: Data Scientist, Actuary, Investment Banker, Software Engineer
+- Entrepreneurship: Financial Consultant, Stock Market Trader, EdTech Math Educator, Analytics Startup Founder
 
-LEADERSHIP:
-Entrepreneur
-Business Manager
-Project Manager
+ACADEMICS (SOCIAL STUDIES):
+- Government: IAS Officer, IPS Officer, Indian Foreign Service Officer, Policy Analyst
+- Private: Management Consultant, Lawyer, HR Manager, Journalist
+- Entrepreneurship: Social Entrepreneur, Political Consultant, Community Platform Founder, Media Startup
 
-COMMUNICATION:
-Lawyer
-Journalist
-Corporate Trainer
-Public Speaker
+ACADEMICS (LANGUAGES):
+- Government: Indian Foreign Service Officer, Government Journalist (AIR/Doordarshan), Professor (UGC NET), Public Relations Officer
+- Private: Content Strategist, Scriptwriter, Editor, Corporate Communications Manager
+- Entrepreneurship: Author, Independent Writer, Translation Consultant, Creative Agency Founder
 
-CREATIVITY:
-Filmmaker
-Designer
-Creative Director
-Content Creator
+LOGIC FOR POPULATING CAREER PATHS:
+1. Identify the single strongest area based on engagement score. This can be an Academic subject (if Academics has the highest score) or a non-academic activity.
+2. Select careers ONLY from that one specific category (no combinations). For Academics, use the specific subject (e.g., SCIENCE, MATHEMATICS).
+3. Always include all 3 tracks: Government, Private, Entrepreneurship
+4. Output as plain text (comma-separated, no bullets, no formatting)
+5. Keep career names simple, clear, and recognizable to parents
+6. If no dominant activity or subject is identified → return empty/null
 
-PROBLEM SOLVING:
-Engineer
-Consultant
-Research Analyst
-Product Manager
-
-HANDS-ON SKILLS:
-Chef
-Mechanic
-Electrician
-EV Technician
-
-ENVIRONMENT:
-Environmental Scientist
-Wildlife Conservationist
-Climate Researcher
-
-TEACHING:
-Teacher
-Professor
-Trainer
-Career Counselor
-
-TRAVEL:
-Pilot
-Cabin Crew
-Travel Manager
-
----------------------------------------------------
-LOGIC
----------------------------------------------------
-
-STEP 1:
-Check if "Academics" is the highest scoring category.
-
-IF YES:
-→ Identify strongest academic subject:
-- Science
-- Mathematics
-- Social Studies
-- Languages
-
-→ Generate careers primarily from that academic category
-
-→ Then lightly align recommendations with the student's top non-academic interest (if relevant), but DO NOT show combinations.
-
-Example:
-Strong academics in Math + interest in computers
-Output:
-Software Developer, AI Engineer, Data Scientist, Product Manager
-
-Strong academics in Science + interest in sports
-Output:
-Doctor, Physiotherapist, Sports Scientist, Nutritionist
-
----------------------------------------------------
-
-STEP 2:
-If NON-ACADEMIC category is highest:
-
-Examples:
-Computers
-Sports
-Arts
-Library
-Music
-Dance
-Leadership
-Creativity etc.
-
-→ Generate careers primarily from that highest non-academic category
-
-→ Cross-check academic performance to ensure suggestions are realistic
-
-Example:
-Highest = Arts
-Good academics
-Output:
-Graphic Designer, Architect, Animator, Product Designer
-
----------------------------------------------------
-
-STEP 3:
-If no strong signals exist:
-Return:
-"Exploration stage — continue observing interests."
-
----------------------------------------------------
-OUTPUT FORMAT
----------------------------------------------------
-
-Future Possibilities to Explore:
-Career 1, Career 2, Career 3, Career 4, Career 5 
+EXAMPLE OUTPUT:
+Government: "ISRO Scientist, DRDO Scientist, NIC Officer" | Private: "Software Engineer, AI/ML Engineer, Cybersecurity Analyst" | Entrepreneurship: "Tech Startup Founder, Freelance Developer, SaaS Product Builder"
 
 -------------------------------------------------
 OUTPUT FORMAT (JSON ONLY)
@@ -728,7 +593,8 @@ OUTPUT FORMAT (JSON ONLY)
       "engagement": 90,
       "future_pathways": "Brief intro sentence. Mention **Career1**, **Career2**, **Career3** in bold. Additional context about skills.",
       "subject_career_combinations": "Career1, Career2, Career3, Career4, Career5 (only if academic subject pairing exists, otherwise null)",
-      "support_activities": "1. First specific action with details; 2. Second specific action with details; 3. Third specific action with details"
+      "support_activities": "Text"
+
     }}
   ],
   "parent_tips": ["Tip 1", "Tip 2", "Tip 3"],
