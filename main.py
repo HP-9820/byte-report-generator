@@ -549,7 +549,6 @@ CLASS-WISE TIP CALIBRATION:
 • Emphasize steady growth and natural strengths
 • Reinforce that exploration is healthy at this stage
 • Mention both top interest areas briefly
-• Do NOT mention the class name directly
 • End with an encouraging note for parents
 
 
@@ -563,9 +562,8 @@ Step 2: Identify the SINGLE activity or subject with the HIGHEST engagement scor
 Step 3: Select careers ONLY from that one winning category below.
         Do NOT mix careers from multiple categories.
         Do NOT create combinations.
-Step 4: Always output exactly 3 tracks: Government, Private, Entrepreneurship.
-Step 5: List 3–4 careers per track as plain comma-separated text.
-Step 6: If no dominant activity is identified → return null.
+Step 4: List 3–4 careers per track as plain comma-separated text.
+Step 5: If no dominant activity is identified → return null.
 
 CAREER PATHS BY CATEGORY:
 
@@ -905,67 +903,6 @@ def create_word_doc(student_name, analysis, class_name, student_data, class_avg_
         support_activities = rec.get("support_activities", "")
         format_all_points(row[2], support_activities)
 
-    # ========================================
-    # FUTURE POSSIBILITIES TABLE
-    # ========================================
-    fp_heading = doc.add_heading("Future Possibilities to Explore:", level=2)
-    fp_heading.style.font.size = Pt(11)
-    fp_heading.style.font.bold = True
-    fp_heading.style.font.color.rgb = RGBColor(0, 51, 102)
-    fp_heading.paragraph_format.space_before = Pt(6)
-    fp_heading.paragraph_format.space_after = Pt(1)
-
-    fp_subtitle = doc.add_paragraph(
-        "Based on the strongest area of engagement, here are career paths worth exploring across different tracks:"
-    )
-    fp_subtitle.style.font.size = Pt(9)
-    fp_subtitle.paragraph_format.space_after = Pt(2)
-
-    fp_table = doc.add_table(rows=1, cols=2)
-    fp_table.style = 'Table Grid'
-    set_table_borders(fp_table)
-    set_column_widths(fp_table, [Inches(2.0), Inches(5.0)])
-
-    fp_hdr = fp_table.rows[0]
-    fp_hdr.cells[0].text = "Track"
-    fp_hdr.cells[1].text = "Career Options"
-    style_table_header(fp_hdr, bg_color="1F5E78")
-
-    future_possibilities_text = analysis.get("future_possibilities", "")
-
-    if future_possibilities_text and str(future_possibilities_text).strip().lower() not in ["null", "none", ""]:
-        tracks = [t.strip() for t in str(future_possibilities_text).split('|') if t.strip()]
-        for track in tracks:
-            if ':' in track:
-                label, careers = track.split(':', 1)
-                label = label.strip()
-                careers = careers.strip().strip('"').strip("'").strip()
-            else:
-                label = "General"
-                careers = track.strip()
-
-            fp_row = fp_table.add_row().cells
-
-            label_para = fp_row[0].paragraphs[0]
-            label_para.clear()
-            label_run = label_para.add_run(label)
-            label_run.bold = True
-            label_run.font.size = Pt(9)
-            label_run.font.color.rgb = RGBColor(31, 94, 120)
-
-            careers_para = fp_row[1].paragraphs[0]
-            careers_para.clear()
-            careers_run = careers_para.add_run(careers)
-            careers_run.font.size = Pt(9)
-    else:
-        fp_row = fp_table.add_row().cells
-        fp_row[0].text = "—"
-        fp_row[1].text = "Not enough data to identify a dominant interest area."
-        for cell in fp_row:
-            for paragraph in cell.paragraphs:
-                for run in paragraph.runs:
-                    run.font.size = Pt(9)
-                    run.italic = True
 
     # ========================================
     # PARENT TIPS
