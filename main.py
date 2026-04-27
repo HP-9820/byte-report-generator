@@ -138,22 +138,22 @@ def add_formatted_text_with_bold(cell, text):
 
 def format_all_points(cell, text):
     """
-    Formats all 3 numbered actions from support_activities into separate lines.
-    Splits by semicolon and renders each as its own paragraph.
+    Displays support activities as normal paragraph text.
+    Removes numbering/bullets formatting.
     """
     cell._element.clear_content()
 
-    if ';' in text:
-        points = [p.strip() for p in text.split(';') if p.strip()]
-    else:
-        points = [text.strip()]
+    cleaned_text = str(text).strip()
 
-    for point in points:
-        p = cell.add_paragraph()
-        p.paragraph_format.space_after = Pt(3)
-        p.paragraph_format.space_before = Pt(1)
-        run = p.add_run(point)
-        run.font.size = Pt(8.5)
+    # remove numbering like 1. 2. 3.
+    cleaned_text = re.sub(r'\d+\.\s*', '', cleaned_text)
+
+    # replace semicolons with proper sentence spacing
+    cleaned_text = cleaned_text.replace(';', '. ')
+
+    p = cell.add_paragraph()
+    run = p.add_run(cleaned_text)
+    run.font.size = Pt(8.5)
 
 def format_future_possibilities(cell, future_possibilities_text):
     """
@@ -552,9 +552,6 @@ CLASS-WISE TIP CALIBRATION:
 • Do NOT mention the class name directly
 • End with an encouraging note for parents
 
--------------------------------------------------
-7) FUTURE POSSIBILITIES TO EXPLORE
--------------------------------------------------
 
 CAREER SELECTION LOGIC (STRICT — FOLLOW EXACTLY):
 
@@ -674,6 +671,7 @@ RULES:
 • Do NOT invent careers outside the lists above
 • Do NOT blend careers from multiple categories
 • The winning category is determined ONLY by the highest engagement score
+
 
 -------------------------------------------------
 OUTPUT FORMAT (JSON ONLY)
