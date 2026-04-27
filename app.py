@@ -13,10 +13,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from main import generate_llm_analysis, create_word_doc, create_spider_chart
 from src.data_loader import load_and_process_data
 from auth import router as auth_router, get_current_user, get_db, init_db
 from urllib.parse import urlparse
+from main import generate_llm_analysis, create_word_doc, create_spider_chart
 
 app = FastAPI(title="ByTE Report Generator API")
 
@@ -27,7 +27,10 @@ app.add_middleware(
         "http://localhost:5173",
         "http://localhost:5174",
         "https://byte-report-generator.netlify.app",
-        "https://byte-report-generator.netlify.app/"
+        "https://byte-report-generator.netlify.app/",
+        "https://reports.byteedu.org",
+        "https://reports.byteedu.org/", 
+
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
