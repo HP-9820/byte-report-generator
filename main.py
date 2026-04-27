@@ -512,81 +512,203 @@ CLASS-WISE TIP CALIBRATION:
 • End with an encouraging note for parents
 
 -------------------------------------------------
-CAREER COMBINATION KNOWLEDGE BASE
--------------------------------------------------
+Your task is to generate "Future Possibilities to Explore" for students based on their strongest area while still considering academic performance.
 
-Use the combinations below to populate "future_pathways" and "subject_career_combinations".
-All careers listed are real, India-relevant, and verified.
+IMPORTANT RULES:
+- Do NOT show combined career paths
+- Do NOT explicitly mention combinations
+- Do NOT overpredict careers
+- Do NOT mention salary/degrees
+- Output should feel exploratory
+- Return only 4–5 careers
 
-ACADEMICS COMBINATIONS:
-• Academics (Science) + Computers: AI/ML Engineer, Data Scientist/Analyst, Biotechnologist, Health Informatics Specialist, Robotics/Mechatronics Engineer, AR/VR Developer, DevOps Engineer
-• Academics (Science) + Arts: Healthcare Administrator, Environmental Scientist, Nutritionist/Dietician, Hardware Product Designer, EdTech Content Creator, Veterinarian
-• Academics (Science) + Sports: Sports Data Analyst, Fitness Trainer/Instructor, Occupational Therapist, Clinical Psychologist, Nutritionist/Dietician, Biotechnologist
-• Academics (Science) + Library: Specialist Doctor, Pharmacist, Environmental Scientist, Public Policy Analyst, Indian Forest Service Officer, Indian Economic Service Officer
-• Academics (Maths) + Computers: Software Developer (Full-Stack), AI/ML Engineer, Cybersecurity Analyst, Blockchain Developer, Cloud Architect/Engineer, FinTech Product Manager, Actuary
-• Academics (Maths) + Arts: UI/UX Designer, Animator/VFX Artist, Hardware Product Designer, Game Designer/Developer, Jewellery Designer, AR/VR Developer
-• Academics (Maths) + Sports: Sports Data Analyst, Actuary, Stock Trader/Equity Analyst, Logistics/Supply Chain Manager, Civil Engineer
-• Academics (Maths) + Library: Chartered Accountant, Financial Planner (CFP), Stock Trader/Equity Analyst, Actuary, Investment Banker, Indian Economic Service Officer
-• Academics (Social) + Library: Civil Servant (IAS/IPS/IFS), Lawyer/Advocate, Judge, Public Policy Analyst, Indian Economic Service Officer, NGO Worker/Social Worker
-• Academics (Social) + Sports: Sports Manager/Agent, Civil Servant (IAS/IPS/IFS), NGO Worker/Social Worker, Corporate Trainer, Armed Forces Officer
-• Academics (Social) + Arts: Fashion Designer, Event Planner, Marketing Manager, Corporate Trainer, EdTech Content Creator
-• Academics (Social) + Computers: Management Consultant, Human Resources Manager, Product Manager, Marketing Manager, FinTech Product Manager
-• Academics (Languages) + Library: Lawyer/Advocate, Professor/Lecturer, School Teacher, EdTech Content Creator, Public Policy Analyst, Corporate Trainer
-• Academics (Languages) + Arts: Content Creator, Event Planner, Marketing Manager, Corporate Trainer, EdTech Content Creator
-• Academics (Languages) + Computers: Product Manager, Marketing Manager, EdTech Content Creator, Corporate Trainer, Human Resources Manager
-• Academics (Languages) + Social: Civil Servant (IAS/IPS/IFS), Lawyer/Advocate, NGO Worker/Social Worker, School Teacher, Special Educator
+---------------------------------------------------
+CAREER DATABASE
+---------------------------------------------------
 
-SPORTS / GAMES COMBINATIONS:
-• Sports + Science: Sports Data Analyst, Fitness Trainer/Instructor, Occupational Therapist, Nutritionist/Dietician, Clinical Psychologist, Biotechnologist
-• Sports + Maths: Sports Data Analyst, Actuary, Logistics/Supply Chain Manager, Esports Athlete/Manager, Financial Planner (CFP)
-• Sports + Languages: Sports Manager/Agent, Content Creator, Corporate Trainer, Marketing Manager, School Teacher
-• Sports + Social: Sports Manager/Agent, Civil Servant (IAS/IPS/IFS), NGO Worker/Social Worker, Armed Forces Officer, Event Planner
-• Sports + Computers: Sports Data Analyst, Esports Athlete/Manager, AR/VR Developer, Game Designer/Developer, DevOps Engineer
-• Sports + Arts: Event Planner, Content Creator, Fashion Designer, Animator/VFX Artist, Tattoo Artist
+SCIENCE:
+Doctor
+Research Scientist
+Biotechnologist
+Pharmacist
+Environmental Scientist
+Veterinarian
+Nutritionist
 
-LIBRARY (READING/BOOKS) COMBINATIONS:
-• Library + Languages: Lawyer/Advocate, Professor/Lecturer, School Teacher, EdTech Content Creator, Corporate Trainer, Content Creator
-• Library + Social: Civil Servant (IAS/IPS/IFS), Judge, Public Policy Analyst, NGO Worker/Social Worker, Indian Forest Service Officer
-• Library + Science: Specialist Doctor, Pharmacist, Environmental Scientist, Indian Forest Service Officer, Public Policy Analyst
-• Library + Maths: Chartered Accountant, Financial Planner (CFP), Investment Banker, Actuary, Indian Economic Service Officer
-• Library + Computers: EdTech Content Creator, Product Manager, Corporate Trainer, Health Informatics Specialist, Public Policy Analyst
-• Library + Arts: Content Creator, Event Planner, Fashion Designer, EdTech Content Creator, Corporate Trainer
+MATHEMATICS:
+Software Developer
+Data Scientist
+AI Engineer
+Actuary
+Financial Analyst
+Civil Engineer
 
-COMPUTERS COMBINATIONS:
-• Computers + Maths: Software Developer (Full-Stack), AI/ML Engineer, Cybersecurity Analyst, Blockchain Developer, FinTech Product Manager, Stock Trader/Equity Analyst
-• Computers + Science: Robotics/Mechatronics Engineer, Biotechnologist, Health Informatics Specialist, AR/VR Developer, Cloud Architect/Engineer
-• Computers + Languages: Product Manager, Marketing Manager, EdTech Content Creator, Corporate Trainer, Content Creator
-• Computers + Social: Management Consultant, Human Resources Manager, Product Manager, FinTech Product Manager, SSC Officer
-• Computers + Arts: UI/UX Designer, Game Designer/Developer, AR/VR Developer, Animator/VFX Artist, Hardware Product Designer
-• Computers + Sports: Sports Data Analyst, Esports Athlete/Manager, Game Designer/Developer, AR/VR Developer, Fitness Trainer/Instructor
+SOCIAL STUDIES:
+Civil Servant
+Lawyer
+Judge
+Policy Analyst
+Historian
+NGO Leader
 
-ARTS / DRAWING COMBINATIONS:
-• Arts + Languages: Content Creator, Marketing Manager, Event Planner, EdTech Content Creator, Corporate Trainer
-• Arts + Social: Fashion Designer, Event Planner, Marketing Manager, Sustainability Manager, NGO Worker/Social Worker
-• Arts + Science: Hardware Product Designer, AR/VR Developer, Animator/VFX Artist, Jewellery Designer, Tattoo Artist
-• Arts + Maths: UI/UX Designer, Animator/VFX Artist, Game Designer/Developer, Jewellery Designer, Civil Engineer
-• Arts + Computers: UI/UX Designer, Game Designer/Developer, AR/VR Developer, Animator/VFX Artist, Graphic Designer
-• Arts + Sports: Event Planner, Content Creator, Fashion Designer, Tattoo Artist, Marketing Manager
+LANGUAGES:
+Author
+Journalist
+Teacher
+Lawyer
+Editor
+Public Speaker
 
-MUSIC / DANCE COMBINATIONS:
-• Music + Languages: Content Creator, Corporate Trainer, Marketing Manager, EdTech Content Creator, Event Planner
-• Music + Maths: EdTech Content Creator, Corporate Trainer, FinTech Product Manager, Event Planner, Content Creator
-• Music + Computers: Content Creator, AR/VR Developer, Game Designer/Developer, EdTech Content Creator, Marketing Manager
-• Music + Science: Occupational Therapist, Clinical Psychologist, Special Educator, Nutritionist/Dietician, Healthcare Administrator
-• Dance + Science: Occupational Therapist, Clinical Psychologist, Fitness Trainer/Instructor, Special Educator, Nutritionist/Dietician
-• Dance + Social: Event Planner, NGO Worker/Social Worker, Special Educator, Corporate Trainer, School Teacher
-• Dance + Languages: Content Creator, Corporate Trainer, Event Planner, EdTech Content Creator, Marketing Manager
-• Dance + Computers: Content Creator, AR/VR Developer, Game Designer/Developer, EdTech Content Creator, Event Planner
+COMPUTERS:
+Software Developer
+AI Engineer
+Cybersecurity Analyst
+Game Developer
+Product Manager
+Cloud Engineer
 
--------------------------------------------------
-LOGIC FOR POPULATING "subject_career_combinations":
--------------------------------------------------
-1. Check if the student has high engagement in BOTH an activity (Academics, Sports/Games, Library, Computers, Arts/Drawing, Music, Dance) AND a related second area
-2. For Academics → match the specific strong subject (Science, Maths, Social, Languages) from the feedback data with the second highest activity
-3. If YES → Select 4-5 best-fit careers from the matching combination above
-4. If NO clear pairing → Leave this field as null or empty string
-5. Format as plain text list separated by commas (no bold, no bullets)
-6. Example output: "Sports Data Analyst, Fitness Trainer/Instructor, Occupational Therapist, Nutritionist/Dietician"
+SPORTS:
+Athlete
+Sports Coach
+Sports Manager
+Fitness Trainer
+Sports Analyst
+
+LIBRARY:
+Author
+Professor
+Researcher
+Journalist
+Historian
+
+ARTS:
+Graphic Designer
+Animator
+Architect
+Fashion Designer
+Product Designer
+
+MUSIC:
+Music Producer
+Singer
+Composer
+Sound Engineer
+
+DANCE:
+Choreographer
+Dance Instructor
+Performer
+
+LEADERSHIP:
+Entrepreneur
+Business Manager
+Project Manager
+
+COMMUNICATION:
+Lawyer
+Journalist
+Corporate Trainer
+Public Speaker
+
+CREATIVITY:
+Filmmaker
+Designer
+Creative Director
+Content Creator
+
+PROBLEM SOLVING:
+Engineer
+Consultant
+Research Analyst
+Product Manager
+
+HANDS-ON SKILLS:
+Chef
+Mechanic
+Electrician
+EV Technician
+
+ENVIRONMENT:
+Environmental Scientist
+Wildlife Conservationist
+Climate Researcher
+
+TEACHING:
+Teacher
+Professor
+Trainer
+Career Counselor
+
+TRAVEL:
+Pilot
+Cabin Crew
+Travel Manager
+
+---------------------------------------------------
+LOGIC
+---------------------------------------------------
+
+STEP 1:
+Check if "Academics" is the highest scoring category.
+
+IF YES:
+→ Identify strongest academic subject:
+- Science
+- Mathematics
+- Social Studies
+- Languages
+
+→ Generate careers primarily from that academic category
+
+→ Then lightly align recommendations with the student's top non-academic interest (if relevant), but DO NOT show combinations.
+
+Example:
+Strong academics in Math + interest in computers
+Output:
+Software Developer, AI Engineer, Data Scientist, Product Manager
+
+Strong academics in Science + interest in sports
+Output:
+Doctor, Physiotherapist, Sports Scientist, Nutritionist
+
+---------------------------------------------------
+
+STEP 2:
+If NON-ACADEMIC category is highest:
+
+Examples:
+Computers
+Sports
+Arts
+Library
+Music
+Dance
+Leadership
+Creativity etc.
+
+→ Generate careers primarily from that highest non-academic category
+
+→ Cross-check academic performance to ensure suggestions are realistic
+
+Example:
+Highest = Arts
+Good academics
+Output:
+Graphic Designer, Architect, Animator, Product Designer
+
+---------------------------------------------------
+
+STEP 3:
+If no strong signals exist:
+Return:
+"Exploration stage — continue observing interests."
+
+---------------------------------------------------
+OUTPUT FORMAT
+---------------------------------------------------
+
+Future Possibilities to Explore:
+Career 1, Career 2, Career 3, Career 4, Career 5 
 
 -------------------------------------------------
 OUTPUT FORMAT (JSON ONLY)
