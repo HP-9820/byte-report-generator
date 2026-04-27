@@ -155,6 +155,47 @@ def format_all_points(cell, text):
         run = p.add_run(point)
         run.font.size = Pt(8.5)
 
+def format_future_possibilities(cell, future_possibilities_text):
+    """
+    Renders the future_possibilities field as 3 labelled tracks:
+    Government, Private, Entrepreneurship — each on its own line.
+    Input format expected:
+    Government: "X, Y, Z" | Private: "A, B, C" | Entrepreneurship: "D, E, F"
+    """
+    cell._element.clear_content()
+
+    if not future_possibilities_text or str(future_possibilities_text).strip().lower() in ["null", "none", ""]:
+        p = cell.add_paragraph()
+        run = p.add_run("Not identified")
+        run.font.size = Pt(8.5)
+        run.italic = True
+        return
+
+    # Split by pipe separator
+    tracks = [t.strip() for t in str(future_possibilities_text).split('|') if t.strip()]
+
+    for track in tracks:
+        if ':' in track:
+            label, careers = track.split(':', 1)
+            label = label.strip()
+            careers = careers.strip().strip('"').strip("'").strip()
+        else:
+            label = ""
+            careers = track.strip()
+
+        p = cell.add_paragraph()
+        p.paragraph_format.space_after = Pt(3)
+        p.paragraph_format.space_before = Pt(1)
+
+        if label:
+            label_run = p.add_run(f"{label}: ")
+            label_run.bold = True
+            label_run.font.size = Pt(8.5)
+            label_run.font.color.rgb = RGBColor(31, 94, 120)
+
+        careers_run = p.add_run(careers)
+        careers_run.font.size = Pt(8.5)
+
 def create_bordered_paragraph(cell, text, bold=False):
     paragraph = cell.paragraphs[0] if cell.paragraphs else cell.add_paragraph()
     paragraph.clear()
@@ -364,7 +405,7 @@ CAREER PATHWAYS FORMAT:
 • List 3-5 specific career paths in BOLD using **Career Name** format
 • Keep descriptions practical and realistic
 • Connect careers logically to the student's interests
-• ALWAYS pick careers from the CAREER COMBINATION KNOWLEDGE BASE below
+• ALWAYS pick careers from the CAREER KNOWLEDGE BASE below
 • Never invent career names not listed in the knowledge base
 
 CAREER SELECTION BY CLASS LEVEL (STRICT):
@@ -512,17 +553,24 @@ CLASS-WISE TIP CALIBRATION:
 • End with an encouraging note for parents
 
 -------------------------------------------------
-Your task is to generate "Future Possibilities to Explore" for students based on their strongest area while still considering academic performance.
+7) FUTURE POSSIBILITIES TO EXPLORE
+-------------------------------------------------
 
-IMPORTANT RULES:
-- Do NOT show combined career paths
-- Do NOT explicitly mention combinations
-- Do NOT overpredict careers
-- Do NOT mention salary/degrees
-- Output should feel exploratory
-- Return only 4–5 careers
+CAREER SELECTION LOGIC (STRICT — FOLLOW EXACTLY):
 
-CAREER PATHS BY ACTIVITY:
+Step 1: Look at ALL activities and their engagement scores (including Academics).
+Step 2: Identify the SINGLE activity or subject with the HIGHEST engagement score.
+        — If Academics has the highest score → use the specific Academic subject
+          that is strongest (Science / Mathematics / Social Studies / Languages).
+        — If a non-academic activity has the highest score → use that activity.
+Step 3: Select careers ONLY from that one winning category below.
+        Do NOT mix careers from multiple categories.
+        Do NOT create combinations.
+Step 4: Always output exactly 3 tracks: Government, Private, Entrepreneurship.
+Step 5: List 3–4 careers per track as plain comma-separated text.
+Step 6: If no dominant activity is identified → return null.
+
+CAREER PATHS BY CATEGORY:
 
 COMPUTERS:
 - Government: ISRO Scientist, DRDO Scientist, NIC Officer, Defence Cybersecurity Officer
@@ -544,36 +592,35 @@ DRAWING & ART:
 - Private: UI/UX Designer, Animator/VFX Artist, Graphic Designer, Product Designer
 - Entrepreneurship: Digital Illustrator, Fashion Designer, Interior Designer, Creative Studio Founder
 
-ACADEMICS (SCIENCE):
+ACADEMICS — SCIENCE:
 - Government: ISRO/DRDO Scientist, Indian Forest Service Officer, Government Doctor, Research Scientist
 - Private: Specialist Doctor, Biotechnologist, Environmental Scientist, Engineer
 - Entrepreneurship: Private Clinic Owner, HealthTech Startup Founder, AgriTech Entrepreneur, Science Educator
 
-ACADEMICS (MATHEMATICS):
+ACADEMICS — MATHEMATICS:
 - Government: Indian Statistical Service Officer, RBI Officer, PSU Finance Manager, Banking Officer
 - Private: Data Scientist, Actuary, Investment Banker, Software Engineer
 - Entrepreneurship: Financial Consultant, Stock Market Trader, EdTech Math Educator, Analytics Startup Founder
 
-ACADEMICS (SOCIAL STUDIES):
+ACADEMICS — SOCIAL STUDIES:
 - Government: IAS Officer, IPS Officer, Indian Foreign Service Officer, Policy Analyst
 - Private: Management Consultant, Lawyer, HR Manager, Journalist
 - Entrepreneurship: Social Entrepreneur, Political Consultant, Community Platform Founder, Media Startup
 
-ACADEMICS (LANGUAGES):
+ACADEMICS — LANGUAGES:
 - Government: Indian Foreign Service Officer, Government Journalist (AIR/Doordarshan), Professor (UGC NET), Public Relations Officer
 - Private: Content Strategist, Scriptwriter, Editor, Corporate Communications Manager
 - Entrepreneurship: Author, Independent Writer, Translation Consultant, Creative Agency Founder
 
-LOGIC FOR POPULATING CAREER PATHS:
-1. Identify the single strongest area based on engagement score. This can be an Academic subject (if Academics has the highest score) or a non-academic activity.
-2. Select careers ONLY from that one specific category (no combinations). For Academics, use the specific subject (e.g., SCIENCE, MATHEMATICS).
-3. Always include all 3 tracks: Government, Private, Entrepreneurship
-4. Output as plain text (comma-separated, no bullets, no formatting)
-5. Keep career names simple, clear, and recognizable to parents
-6. If no dominant activity or subject is identified → return empty/null
+OUTPUT FORMAT FOR future_possibilities (MANDATORY):
+Government: Career1, Career2, Career3 | Private: Career1, Career2, Career3 | Entrepreneurship: Career1, Career2, Career3
 
-EXAMPLE OUTPUT:
-Government: "ISRO Scientist, DRDO Scientist, NIC Officer" | Private: "Software Engineer, AI/ML Engineer, Cybersecurity Analyst" | Entrepreneurship: "Tech Startup Founder, Freelance Developer, SaaS Product Builder"
+RULES:
+• Output must be plain text — no bullets, no formatting, no JSON inside this field
+• Career names must be simple and recognizable to Indian parents
+• Do NOT invent careers outside the lists above
+• Do NOT blend careers from multiple categories
+• The winning category is determined ONLY by the highest engagement score
 
 -------------------------------------------------
 OUTPUT FORMAT (JSON ONLY)
@@ -592,14 +639,19 @@ OUTPUT FORMAT (JSON ONLY)
       "area": "Name",
       "engagement": 90,
       "future_pathways": "Brief intro sentence. Mention **Career1**, **Career2**, **Career3** in bold. Additional context about skills.",
-      "subject_career_combinations": "Career1, Career2, Career3, Career4, Career5 (only if academic subject pairing exists, otherwise null)",
-      "support_activities": "Text"
-
+      "support_activities": "1. Action one; 2. Action two; 3. Action three"
     }}
   ],
+  "future_possibilities": "Government: Career1, Career2, Career3 | Private: Career1, Career2, Career3 | Entrepreneurship: Career1, Career2, Career3",
   "parent_tips": ["Tip 1", "Tip 2", "Tip 3"],
   "conclusion": "Text"
 }}
+
+IMPORTANT NOTES ON JSON OUTPUT:
+• The "recommendations" array must NOT contain a "subject_career_combinations" field.
+• The "future_possibilities" field is TOP-LEVEL in the JSON (not inside recommendations).
+• "future_possibilities" must reflect ONLY the single highest-scoring area.
+• Return valid JSON only — no markdown, no explanation outside the JSON.
 """
 
     max_retries = 3
@@ -802,28 +854,75 @@ def create_word_doc(student_name, analysis, class_name, student_data, class_avg_
             for run in paragraph.runs:
                 run.font.size = Pt(8.5)
 
-        # Column 2: Future pathways (bold) + subject career combinations
+        # Column 2: Future pathways with bold careers — NO subject_career_combinations
         future_pathways = rec.get("future_pathways", "")
         add_formatted_text_with_bold(row[1], future_pathways)
-
-        subject_combos = rec.get("subject_career_combinations")
-        if subject_combos and str(subject_combos).strip().lower() not in ["null", "none", ""]:
-            sep_para = row[1].add_paragraph()
-            sep_para.paragraph_format.space_after = Pt(2)
-
-            combo_para = row[1].add_paragraph()
-            label_run = combo_para.add_run("Combined Career Paths: ")
-            label_run.bold = True
-            label_run.font.size = Pt(8.5)
-            label_run.font.color.rgb = RGBColor(31, 94, 120)
-
-            combo_run = combo_para.add_run(str(subject_combos))
-            combo_run.font.size = Pt(8.5)
-            combo_run.italic = True
 
         # Column 3: All 3 support activities on separate lines
         support_activities = rec.get("support_activities", "")
         format_all_points(row[2], support_activities)
+
+    # ========================================
+    # FUTURE POSSIBILITIES TABLE
+    # ========================================
+    fp_heading = doc.add_heading("Future Possibilities to Explore:", level=2)
+    fp_heading.style.font.size = Pt(11)
+    fp_heading.style.font.bold = True
+    fp_heading.style.font.color.rgb = RGBColor(0, 51, 102)
+    fp_heading.paragraph_format.space_before = Pt(6)
+    fp_heading.paragraph_format.space_after = Pt(1)
+
+    fp_subtitle = doc.add_paragraph(
+        "Based on the strongest area of engagement, here are career paths worth exploring across different tracks:"
+    )
+    fp_subtitle.style.font.size = Pt(9)
+    fp_subtitle.paragraph_format.space_after = Pt(2)
+
+    fp_table = doc.add_table(rows=1, cols=2)
+    fp_table.style = 'Table Grid'
+    set_table_borders(fp_table)
+    set_column_widths(fp_table, [Inches(2.0), Inches(5.0)])
+
+    fp_hdr = fp_table.rows[0]
+    fp_hdr.cells[0].text = "Track"
+    fp_hdr.cells[1].text = "Career Options"
+    style_table_header(fp_hdr, bg_color="1F5E78")
+
+    future_possibilities_text = analysis.get("future_possibilities", "")
+
+    if future_possibilities_text and str(future_possibilities_text).strip().lower() not in ["null", "none", ""]:
+        tracks = [t.strip() for t in str(future_possibilities_text).split('|') if t.strip()]
+        for track in tracks:
+            if ':' in track:
+                label, careers = track.split(':', 1)
+                label = label.strip()
+                careers = careers.strip().strip('"').strip("'").strip()
+            else:
+                label = "General"
+                careers = track.strip()
+
+            fp_row = fp_table.add_row().cells
+
+            label_para = fp_row[0].paragraphs[0]
+            label_para.clear()
+            label_run = label_para.add_run(label)
+            label_run.bold = True
+            label_run.font.size = Pt(9)
+            label_run.font.color.rgb = RGBColor(31, 94, 120)
+
+            careers_para = fp_row[1].paragraphs[0]
+            careers_para.clear()
+            careers_run = careers_para.add_run(careers)
+            careers_run.font.size = Pt(9)
+    else:
+        fp_row = fp_table.add_row().cells
+        fp_row[0].text = "—"
+        fp_row[1].text = "Not enough data to identify a dominant interest area."
+        for cell in fp_row:
+            for paragraph in cell.paragraphs:
+                for run in paragraph.runs:
+                    run.font.size = Pt(9)
+                    run.italic = True
 
     # ========================================
     # PARENT TIPS
