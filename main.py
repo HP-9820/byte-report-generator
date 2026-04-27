@@ -572,48 +572,101 @@ Step 6: If no dominant activity is identified → return null.
 
 CAREER PATHS BY CATEGORY:
 
+SPORTS:
+Sports Scientist
+Physiotherapist
+Sports Nutritionist
+Strength & Conditioning Coach
+Exercise Physiologist
+Sports Data Analyst
+Performance Analyst
+Sports Statistics Expert
+Sports Journalist
+Sports Commentator
+Sports Content Creator
+Sports PR Manager
+Sports Administrator
+Sports Policy Analyst
+Sports Management Professional
+Community Sports Officer
+
+LIBRARY:
+Author
+Writer
+Editor
+Publisher
+Journalist
+Scriptwriter
+Content Strategist
+Historian
+Civil Services Officer
+Political Analyst
+Policy Researcher
+Think Tank Researcher
+Research Scholar
+Academic Scientist
+Science Communicator
+Science Writer
+Economist
+Actuary
+Data Research Analyst
+Financial Analyst
+
 COMPUTERS:
-- Government: ISRO Scientist, DRDO Scientist, NIC Officer, Defence Cybersecurity Officer
-- Private: Software Engineer, Cybersecurity Analyst, AI/ML Engineer, Cloud Engineer
-- Entrepreneurship: Tech Startup Founder, Freelance Developer, SaaS Product Builder, Game Developer
+Software Engineer
+Data Scientist
+AI/ML Engineer
+Game Developer
+Quant Analyst
+Robotics Engineer
+Bioinformatics Specialist
+Environmental Tech Analyst
+Health Tech Developer
+Technical Writer
+UX Writer
+Product Manager
+Digital Marketer
+Instructional Designer
+Civic Tech Specialist
+GovTech Consultant
+Digital Policy Analyst
+Cyber Law Professional
 
-SPORTS & GAMES:
-- Government: Armed Forces Officer, Police Officer (IPS), Sports Authority of India Coach, Physical Education Officer
-- Private: Professional Athlete, Sports Data Analyst, Esports Manager, Fitness Trainer
-- Entrepreneurship: Gym Owner, Sports Academy Founder, Fitness Influencer, Esports Athlete
+ARTS:
+Filmmaker
+Lyricist
+Screenwriter
+Theatre Artist
+Creative Director
+Fashion Designer
+Cultural Researcher
+Interior Designer
+Heritage Conservationist
+Medical Illustrator
+Industrial Designer
+Product Designer
+Architect
+UI/UX Designer
+Animation & VFX Artist
+Game Designer
 
-LIBRARY (READING/BOOKS):
-- Government: IAS Officer, Judge/Judicial Officer, Indian Economic Service Officer, Policy Officer
-- Private: Author, Journalist, Policy Analyst, Economist
-- Entrepreneurship: Educational Content Creator, Blogger/Newsletter Creator, Independent Research Consultant, Publishing Startup
+MUSIC:
+Lyricist
+Music Journalist
+Radio Jockey
+Podcast Host
+Music Educator
+Sound Engineer
+Music Producer
+Audio Technology Specialist
 
-DRAWING & ART:
-- Government: Architect (Government Projects), Design Officer (Public Sector), Art Teacher, Cultural Department Artist
-- Private: UI/UX Designer, Animator/VFX Artist, Graphic Designer, Product Designer
-- Entrepreneurship: Digital Illustrator, Fashion Designer, Interior Designer, Creative Studio Founder
-
-ACADEMICS — SCIENCE:
-- Government: ISRO/DRDO Scientist, Indian Forest Service Officer, Government Doctor, Research Scientist
-- Private: Specialist Doctor, Biotechnologist, Environmental Scientist, Engineer
-- Entrepreneurship: Private Clinic Owner, HealthTech Startup Founder, AgriTech Entrepreneur, Science Educator
-
-ACADEMICS — MATHEMATICS:
-- Government: Indian Statistical Service Officer, RBI Officer, PSU Finance Manager, Banking Officer
-- Private: Data Scientist, Actuary, Investment Banker, Software Engineer
-- Entrepreneurship: Financial Consultant, Stock Market Trader, EdTech Math Educator, Analytics Startup Founder
-
-ACADEMICS — SOCIAL STUDIES:
-- Government: IAS Officer, IPS Officer, Indian Foreign Service Officer, Policy Analyst
-- Private: Management Consultant, Lawyer, HR Manager, Journalist
-- Entrepreneurship: Social Entrepreneur, Political Consultant, Community Platform Founder, Media Startup
-
-ACADEMICS — LANGUAGES:
-- Government: Indian Foreign Service Officer, Government Journalist (AIR/Doordarshan), Professor (UGC NET), Public Relations Officer
-- Private: Content Strategist, Scriptwriter, Editor, Corporate Communications Manager
-- Entrepreneurship: Author, Independent Writer, Translation Consultant, Creative Agency Founder
-
-OUTPUT FORMAT FOR future_possibilities (MANDATORY):
-Government: Career1, Career2, Career3 | Private: Career1, Career2, Career3 | Entrepreneurship: Career1, Career2, Career3
+DANCE:
+Dance Therapist
+Movement Analyst
+Fitness Choreographer
+Cultural Program Coordinator
+Dance Historian
+Arts Administrator
 
 RULES:
 • Output must be plain text — no bullets, no formatting, no JSON inside this field
@@ -639,21 +692,13 @@ OUTPUT FORMAT (JSON ONLY)
       "area": "Name",
       "engagement": 90,
       "future_pathways": "Brief intro sentence. Mention **Career1**, **Career2**, **Career3** in bold. Additional context about skills.",
-      "support_activities": "1. Action one; 2. Action two; 3. Action three"
+      "support_activities": "Text"
     }}
   ],
-  "future_possibilities": "Government: Career1, Career2, Career3 | Private: Career1, Career2, Career3 | Entrepreneurship: Career1, Career2, Career3",
   "parent_tips": ["Tip 1", "Tip 2", "Tip 3"],
   "conclusion": "Text"
 }}
-
-IMPORTANT NOTES ON JSON OUTPUT:
-• The "recommendations" array must NOT contain a "subject_career_combinations" field.
-• The "future_possibilities" field is TOP-LEVEL in the JSON (not inside recommendations).
-• "future_possibilities" must reflect ONLY the single highest-scoring area.
-• Return valid JSON only — no markdown, no explanation outside the JSON.
 """
-
     max_retries = 3
     for attempt in range(max_retries):
         try:
